@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -226,12 +227,17 @@ public class CarService {
     }
 
 
-    public void deleteCar(Long id) {
-        CarEntity existingCar = carRepository.findById(id)
-            .orElseThrow(() -> new CarNotFoundException("Car not found with id: " + id));
+    public boolean deleteCar(Long id) {
+        Optional<CarEntity> existingCarOptional = carRepository.findById(id);
 
-        carRepository.deleteById(existingCar.getId());
+        if (existingCarOptional.isPresent()) {
+            carRepository.deleteById(existingCarOptional.get().getId());
+            return true; // deletion successful
+        }
+
+        return false; // car not found
     }
+
 
     
 

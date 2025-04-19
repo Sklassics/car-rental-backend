@@ -12,11 +12,11 @@ import com.sklassics.cars.services.utility.ResponseUtil.ErrorMessages;
 
 @RestController
 @RequestMapping("/api/reservations")
-public class ReservationController {
+public class ReservationSystem {
 
     private final ReservationService reservationService;
 
-    public ReservationController(ReservationService reservationService) {
+    public ReservationSystem(ReservationService reservationService) {
         this.reservationService = reservationService;
     }
 
