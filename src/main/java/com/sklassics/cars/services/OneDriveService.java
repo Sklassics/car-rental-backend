@@ -1,4 +1,5 @@
 //package com.sklassics.cars.services;
+
 //
 //import org.springframework.beans.factory.annotation.Value;
 //import org.springframework.stereotype.Service;
@@ -240,7 +241,47 @@ public class OneDriveService {
             }
         }
     }
+    
+    public String uploadLicenseFile(String folderName, MultipartFile file) throws Exception {
+        // Initialize GraphServiceClient (oneDrive API client)
+        GraphServiceClient<Request> graphClient = getGraphClient();
 
+        // Define file upload path on OneDrive (UserLicenses folder in this case)
+        String licenseFolderPath = "License/" + folderName; 
+
+        // Ensure folder exists in OneDrive
+        createFolderIfNotExists(graphClient, "License", folderName);
+
+        // Get the original file name and extension
+        String originalFileName = file.getOriginalFilename();
+        String fileExtension = getFileExtension(originalFileName);
+
+        // Validate file format
+        if (!isValidExtension(fileExtension)) {
+            throw new Exception("Invalid file format. Allowed formats: .jpg, .jpeg, .png, .pdf");
+        }
+
+        // Convert MultipartFile to byte array
+        byte[] fileBytes = file.getBytes();
+        String fileName = System.currentTimeMillis() + fileExtension; // Generate unique file name
+        String uploadPath = String.format("%s/%s", licenseFolderPath, fileName); // Set file path
+
+        // Upload file to OneDrive
+        graphClient.users(userEmail)
+                .drive()
+                .root()
+                .itemWithPath(uploadPath)
+                .content()
+                .buildRequest()
+                .put(fileBytes);
+
+        // Generate uploaded file URL and return
+        String uploadedUrl = String.format("https://graph.microsoft.com/v1.0/users/%s/drive/root:/%s", userEmail, uploadPath);
+        return uploadedUrl;
+    }
+
+    // Helper methods like getGraphClient(), createFolderIfNotExists(), getFileExtension(), and isValidExtension()
+    
 
     private boolean isValidExtension(String extension) {
         return Arrays.asList(allowedExtensions).contains(extension.toLowerCase());

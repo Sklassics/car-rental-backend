@@ -30,6 +30,7 @@ public class CarController {
             @RequestPart("car") String carJson,
             @RequestPart(value = "images", required = false) List<MultipartFile> images) {
 
+    	
         try {
         	System.out.println("Images received: " + (images == null ? "null" : images.size()));
 

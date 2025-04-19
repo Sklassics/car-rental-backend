@@ -23,6 +23,13 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+    
+    
+    
+    @Autowired
+    private OneDriveService oneDriveService;
+    
+    
 
     private static final String DUMMY_OTP = "123456";
 
@@ -46,7 +53,21 @@ public class UserService {
         userRepository.save(user);
         return ResponseEntity.ok("User registered successfully");
     }
+    public ResponseEntity<?> sendOtp(String mobile, String email) {
+        // No OTP in request, generate/send the dummy one
+        System.out.println("Sending dummy OTP " + DUMMY_OTP + " to " + mobile + " / " + email);
+        return ResponseEntity.ok("OTP sent to your mobile/email.");
+    }
 
+    // ========== VERIFY OTP ==========
+    public ResponseEntity<?> verifyOtp(String mobile, String otp) {
+        if (!DUMMY_OTP.equals(otp)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid OTP");
+        }
+
+        return ResponseEntity.ok("OTP verified successfully.");
+    }
+    
 
     public ResponseEntity<?> login(String mobile, String otp) {
         if (!DUMMY_OTP.equals(otp)) {
@@ -78,6 +99,11 @@ public class UserService {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    public String uploadLicenseFile(Long userId, MultipartFile file) throws Exception {
+        // Optionally, associate the file with the user and save file path in database
+        String uploadedFileUrl = oneDriveService.uploadLicenseFile("UserLicenses", file);
+        return uploadedFileUrl; // Returns the URL of the uploaded license file
+    }
 //    public ResponseEntity<?> uploadLicense(Long id, MultipartFile file) {
 //        return userRepository.findById(id)
 //                .map(user -> {
