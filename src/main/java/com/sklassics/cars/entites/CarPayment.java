@@ -1,4 +1,4 @@
-package com.sklassics.cars.entites;
+ package com.sklassics.cars.entites;
 
 
 import jakarta.persistence.*;

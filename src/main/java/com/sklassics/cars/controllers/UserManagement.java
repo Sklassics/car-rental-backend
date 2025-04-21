@@ -1,6 +1,7 @@
 package com.sklassics.cars.controllers;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -11,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.sklassics.cars.entites.User;
 import com.sklassics.cars.repositories.UserRepository;
+import com.sklassics.cars.services.JwtService;
 import com.sklassics.cars.services.OtpService;
 import com.sklassics.cars.services.utility.ResponseUtil;
 
@@ -23,9 +25,13 @@ public class UserManagement {
 
     @Autowired
     private OtpService otpService;
-
+    
+    @Autowired
+    private JwtService jwtService;
+    
     @PostMapping("/auth/send-otp")
     public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> request) {
+    	
         String mobile = request.get("mobile");
         String email = request.get("email");
 
@@ -70,8 +76,16 @@ public class UserManagement {
         ResponseEntity<?> otpValidationResponse = otpService.validateLoginOtp(mobile, otp);
 
         if (otpValidationResponse.getStatusCode().is2xxSuccessful()) {
-            // String jwtToken = userService.generateJwtToken(mobile);
-            return ResponseEntity.ok(ResponseUtil.successMessage("Login successful."));
+            
+            String role = "customer";
+
+            String token = jwtService.generateToken(mobile, role);
+
+            Map<String, Object> responseBody = new HashMap<>();
+            responseBody.put("message", "Login successful.");
+            responseBody.put("token", token);
+
+            return ResponseEntity.ok(responseBody);
         } else {
             return otpValidationResponse;
         }

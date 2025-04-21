@@ -22,14 +22,15 @@ public class User {
 	private String aadhaarFilePath;
 	private String licenseFilePath;
 	private String Location;
-	
-	private String isAdminVerifiedDocuments ;
-	
+
+	private String isAdminVerifiedDocuments;
+
 	private LocalDate submittedAt;
-	
+
 	private LocalDate updatedAt;
-	
-	
+
+	private LocalDate accountCreatedAt;
+
 	public Long getId() {
 		return id;
 	}
@@ -94,8 +95,6 @@ public class User {
 		Location = location;
 	}
 
-	
-
 	public String getIsAdminVerifiedDocuments() {
 		return isAdminVerifiedDocuments;
 	}
@@ -120,7 +119,12 @@ public class User {
 		this.updatedAt = updatedAt;
 	}
 
-	
-	
-	
+	public LocalDate getAccountCreatedAt() {
+		return accountCreatedAt;
+	}
+
+	public void setAccountCreatedAt(LocalDate accountCreatedAt) {
+		this.accountCreatedAt = accountCreatedAt;
+	}
+
 }

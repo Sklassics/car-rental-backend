@@ -2,13 +2,11 @@ package com.sklassics.cars.entites;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 
 @Entity
 public class Reservation {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,11 +18,11 @@ public class Reservation {
 
     private LocalDate fromDate;
     private LocalDate toDate;
-    
-    private String paymentId;
 
     private String pickupTime;
     private String dropTime;
+
+    private String paymentId;
 
     private String status;
 
@@ -85,26 +83,31 @@ public class Reservation {
         this.toDate = toDate;
     }
 
-
-    
-
     public String getPickupTime() {
-		return pickupTime;
-	}
+        return pickupTime;
+    }
 
-	public void setPickupTime(String pickupTime) {
-		this.pickupTime = pickupTime;
-	}
+    public void setPickupTime(String pickupTime) {
+        this.pickupTime = pickupTime;
+    }
 
-	public String getDropTime() {
-		return dropTime;
-	}
+    public String getDropTime() {
+        return dropTime;
+    }
 
-	public void setDropTime(String dropTime) {
-		this.dropTime = dropTime;
-	}
+    public void setDropTime(String dropTime) {
+        this.dropTime = dropTime;
+    }
 
-	public String getStatus() {
+    public String getPaymentId() {
+        return paymentId;
+    }
+
+    public void setPaymentId(String paymentId) {
+        this.paymentId = paymentId;
+    }
+
+    public String getStatus() {
         return status;
     }
 
@@ -116,17 +119,7 @@ public class Reservation {
         return createdAt;
     }
 
-	public String getPaymentId() {
-		return paymentId;
-	}
-
-	public void setPaymentId(String paymentId) {
-		this.paymentId = paymentId;
-	}
-
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
-	}
-    
-    
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }

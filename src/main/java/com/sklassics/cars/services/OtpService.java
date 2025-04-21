@@ -47,6 +47,7 @@ public class OtpService {
 			User user = new User();
 			user.setMobile(mobile);
 			user.setEmail(cached.getEmail());
+			
 			userRepository.save(user);
 			otpCacheMap.remove(mobile);
 			return ResponseEntity.ok(ResponseUtil.successMessage("OTP verified and user saved."));
