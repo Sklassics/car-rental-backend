@@ -28,6 +28,8 @@ public class Booking {
 
 	private String status;
 
+	private boolean agreedToTerms;
+
 	private LocalDateTime createdAt;
 
 	@PrePersist
@@ -131,6 +133,14 @@ public class Booking {
 
 	public void setUserId(Long userId) {
 		this.userId = userId;
+	}
+
+	public boolean isAgreedToTerms() {
+		return agreedToTerms;
+	}
+
+	public void setAgreedToTerms(boolean agreedToTerms) {
+		this.agreedToTerms = agreedToTerms;
 	}
 
 }

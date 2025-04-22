@@ -11,7 +11,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByUserId(Long userId);
     List<Booking> findByCarId(Long carId);
     
-    @Query("SELECT b FROM Booking b WHERE b.carId = :carId AND b.status NOT IN ('cancelled', 'refunded')")
-    List<Booking> findActiveBookingsByCarId(Long carId);
+    @Query("SELECT b FROM Booking b WHERE b.carId = :carId AND b.status = 'paid'")
+    List<Booking> findPaidBookingsByCarId(Long carId);
 
 }

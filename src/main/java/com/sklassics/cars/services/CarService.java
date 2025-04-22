@@ -52,8 +52,8 @@ public class CarService {
             car.setSeatingCapacity(carRequest.getSeatingCapacity());
             car.setColor(carRequest.getColor());
             car.setLocation(carRequest.getLocation());
-
-            // First save to generate ID
+            car.setAvailable(true);
+            
             car = carRepository.save(car);
 
             List<String> imageUrls = new ArrayList<>();
@@ -126,7 +126,8 @@ public class CarService {
                     secureLinks,
                     car.getCreatedAt(),
                     car.getCost(),
-                    car.getLocation()
+                    car.getLocation(),
+                    car.isAvailable()
                 );
             } catch (Exception e) {
                 System.err.println("Error handling car ID " + car.getId() + ": " + e.getMessage());
@@ -176,7 +177,8 @@ public class CarService {
                     secureLinks,
                     car.getCreatedAt(),
                     car.getCost(),
-                    car.getLocation()
+                    car.getLocation(),
+                    car.isAvailable()
             );
 
         } catch (Exception e) {

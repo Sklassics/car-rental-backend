@@ -15,7 +15,7 @@ import com.sklassics.cars.exceptions.CustomExceptions.CarNotFoundException;
 import jakarta.annotation.PostConstruct;
 
 import java.time.*;
-
+import java.time.temporal.ChronoUnit;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,73 +45,81 @@ public class PaymentService {
     }
     
     
-  public PaymentResponse calculateCost(PaymentRequest paymentRequest) {
+    public PaymentResponse calculateCost(PaymentRequest paymentRequest) {
 
-      System.out.println("Received PaymentRequest: " + paymentRequest);
+        System.out.println("Received PaymentRequest: " + paymentRequest);
 
-      long carId = paymentRequest.getCarId();
-      System.out.println("Extracted carId: " + carId);
+        long carId = paymentRequest.getCarId();
+        System.out.println("Extracted carId: " + carId);
 
-      CarEntity car = carRepository.findById(carId)
-          .orElseThrow(() -> {
-              System.out.println("Car not found with ID: " + carId);
-              return new CarNotFoundException("Car not found");
-          });
+        CarEntity car = carRepository.findById(carId)
+            .orElseThrow(() -> {
+                System.out.println("Car not found with ID: " + carId);
+                return new CarNotFoundException("Car not found");
+            });
 
-      System.out.println("Fetched CarEntity: " + car);
+        System.out.println("Fetched CarEntity: " + car);
 
-      Double costPerDay = car.getCost();
-      System.out.println("Cost per day: " + costPerDay);
+        Double costPerDay = car.getCost();
+        System.out.println("Cost per day: " + costPerDay);
 
-      LocalDate fromDate = paymentRequest.getFromDate();
-      LocalDate toDate = paymentRequest.getToDate();
+        LocalDate fromDate = paymentRequest.getFromDate();
+        LocalDate toDate = paymentRequest.getToDate();
+        System.out.println("From Date: " + fromDate + ", To Date: " + toDate);
 
-      System.out.println("From Date: " + fromDate + ", To Date: " + toDate);
+        LocalTime pickupTime = paymentRequest.getPickupTime();
+        LocalTime returnTime = paymentRequest.getReturnTime();
+        System.out.println("Pickup Time: " + pickupTime + ", Return Time: " + returnTime);
 
-      LocalTime pickupTime = paymentRequest.getPickupTime();
-      LocalTime returnTime = paymentRequest.getReturnTime();
-      System.out.println("Pickup Time: " + pickupTime + ", Return Time: " + returnTime);
+        long duration = ChronoUnit.DAYS.between(fromDate, toDate) + 1;
+        System.out.println("Calculated duration: " + duration);
 
-      long duration = Duration.between(fromDate.atStartOfDay(), toDate.atStartOfDay()).toDays();
-      System.out.println("Rental duration in days: " + duration);
+        // Handle same day rentals
+        if (duration == 0) {
+            duration = 1;
+            System.out.println("Same-day rental. Setting duration to 1 day.");
+        }
 
-      double carPrice = roundToTwoDecimals(duration * costPerDay); 
-      double discount = 0.0;
+        System.out.println("Rental duration in days: " + duration);
 
-      if (duration >= 10) {
-          discount = roundToTwoDecimals(carPrice * 0.20);
-          System.out.println("Applied 20% discount: -" + discount);
-      } else if (duration >= 5 || duration >= 3) {
-          discount = roundToTwoDecimals(carPrice * 0.15);
-          System.out.println("Applied 15% discount: -" + discount);
-      }
+        double carPrice = roundToTwoDecimals(duration * costPerDay); 
+        double discount = 0.0;
 
-      double insuranceCost = 0.0;
-      double cleaningFee = 199.0;
+        if (duration >= 10) {
+            discount = roundToTwoDecimals(carPrice * 0.20);
+            System.out.println("Applied 20% discount: -" + discount);
+        } else if (duration >= 5) {
+            discount = roundToTwoDecimals(carPrice * 0.15);
+            System.out.println("Applied 15% discount: -" + discount);
+        }
 
-      double extraCost = 0.0;
-      if (pickupTime != null && returnTime != null) {
-          long extraHours = returnTime.getHour() - pickupTime.getHour();
-          double hourlyRate = costPerDay / 24.0;
-          extraCost = roundToTwoDecimals(extraHours * hourlyRate);
-          System.out.println("Extra hours: " + extraHours + ", Extra cost: " + extraCost);
-      }
+        double insuranceCost = 0.0;
+        double cleaningFee = 199.0;
 
-      double totalCost = roundToTwoDecimals(carPrice - discount + insuranceCost + cleaningFee + extraCost);
-      System.out.println("Total rental cost after all additions: " + totalCost);
+        double extraCost = 0.0;
+        if (pickupTime != null && returnTime != null) {
+            long extraHours = returnTime.getHour() - pickupTime.getHour();
+            double hourlyRate = costPerDay / 24.0;
+            extraCost = roundToTwoDecimals(extraHours * hourlyRate);
+            System.out.println("Extra hours: " + extraHours + ", Extra cost: " + extraCost);
+        }
 
-      PaymentResponse response = new PaymentResponse();
-      response.setRentalCost(totalCost);
-      response.setDuration(duration);
-      response.setDurationText(duration == 1 ? "1 day" : duration + " days");
+        double totalCost = roundToTwoDecimals(carPrice - discount + insuranceCost + cleaningFee + extraCost);
+        System.out.println("Total rental cost after all additions: " + totalCost);
 
-      response.setCarPrice(carPrice);
-      response.setDiscount(discount);
-      response.setInsuranceCost(insuranceCost);
-      response.setCleaningFee(cleaningFee);
+        PaymentResponse response = new PaymentResponse();
+        response.setRentalCost(totalCost);
+        response.setDuration(duration);
+        response.setDurationText(duration == 1 ? "1 day" : duration + " days");
 
-      return response;
-  }
+        response.setCarPrice(carPrice);
+        response.setDiscount(discount);
+        response.setInsuranceCost(insuranceCost);
+        response.setCleaningFee(cleaningFee);
+
+        return response;
+    }
+
 
   private double roundToTwoDecimals(double value) {
       return Math.round(value * 100.0) / 100.0;

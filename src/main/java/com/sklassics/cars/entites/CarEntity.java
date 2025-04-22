@@ -44,15 +44,7 @@ public class CarEntity {
     @Column(updatable = false)
     private LocalDateTime createdAt;
     
-    private boolean isReserved = false;
-    
-    private String reservedFrom;
-    
-    private String reservedTo;
-    
-    private String reservationPickUpTime;
-    
-    private String reservationDropTime;
+    private boolean available;
     
    
 	public Long getId() {
@@ -160,40 +152,16 @@ public class CarEntity {
 	public void setLocation(String location) {
 		this.location = location;
 	}
-	public boolean isReserved() {
-		return isReserved;
+
+	public boolean isAvailable() {
+		return available;
 	}
-	public void setReserved(boolean isReserved) {
-		this.isReserved = isReserved;
+	public void setAvailable(boolean available) {
+		this.available = available;
 	}
-	public String getReservedFrom() {
-		return reservedFrom;
-	}
-	public void setReservedFrom(String reservedFrom) {
-		this.reservedFrom = reservedFrom;
-	}
-	public String getReservedTo() {
-		return reservedTo;
-	}
-	public void setReservedTo(String reservedTo) {
-		this.reservedTo = reservedTo;
-	}
-	public String getReservationPickUpTime() {
-		return reservationPickUpTime;
-	}
-	public void setReservationPickUpTime(String reservationPickUpTime) {
-		this.reservationPickUpTime = reservationPickUpTime;
-	}
-	public String getReservationDropTime() {
-		return reservationDropTime;
-	}
-	public void setReservationDropTime(String reservationDropTime) {
-		this.reservationDropTime = reservationDropTime;
-	}
+
 	
-	
-	
-	
+
 	
     
 }

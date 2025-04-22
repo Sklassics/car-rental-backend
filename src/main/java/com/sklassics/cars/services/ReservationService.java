@@ -22,27 +22,27 @@ public class ReservationService {
     private CarRepository carRepository;
 
 
-	public Reservation saveReservation(Reservation reservation) {
-	   
-	    CarEntity car = carRepository.findById(reservation.getCarId())
-	            .orElseThrow(() -> new CarNotFoundException("Car not found with ID: " + reservation.getCarId()));
-
-	    reservation.setPaymentId(reservation.getPaymentId());
-
-	    // Save the reservation
-	    Reservation savedReservation = reservationRepository.save(reservation);
-
-
 	
-	    car.setReserved(true);
-	    car.setReservedFrom(savedReservation.getFromDate().toString());
-	    car.setReservedTo(savedReservation.getToDate().toString());
-	    car.setReservationPickUpTime(savedReservation.getPickupTime().toString());
-	    car.setReservationDropTime(savedReservation.getDropTime().toString());
-	    carRepository.save(car);
+	public Reservation saveReservation(Reservation reservation) {
 
-	    return savedReservation;
+	    
+	    carRepository.findById(reservation.getCarId())
+	        .orElseThrow(() -> new CarNotFoundException("Car not found with ID: " + reservation.getCarId()));
+
+	    
+	    reservation.setCarId(reservation.getCarId());
+	    reservation.setMobile(reservation.getMobile());
+	    reservation.setEmail(reservation.getEmail());
+	    reservation.setFromDate(reservation.getFromDate());
+	    reservation.setToDate(reservation.getToDate());
+	    reservation.setPickupTime(reservation.getPickupTime());
+	    reservation.setDropTime(reservation.getDropTime());
+	    reservation.setPaymentId(reservation.getPaymentId());
+	    reservation.setStatus("CONFIRMED");
+
+	    return reservationRepository.save(reservation);
 	}
+
 
 
 
@@ -77,8 +77,7 @@ public class ReservationService {
             existing.setPickupTime(updatedReservation.getPickupTime());
             existing.setDropTime(updatedReservation.getDropTime());
 
-//            existing.setEmail(updatedReservation.getEmail());
-//            existing.setMobile(updatedReservation.getMobile());
+
 
             return reservationRepository.save(existing);
         } else {

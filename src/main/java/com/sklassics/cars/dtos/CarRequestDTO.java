@@ -20,6 +20,7 @@ public class CarRequestDTO {
     private LocalDateTime createdAt;
     private Long id;
     private String location;
+    private boolean available;
     
     private Double cost;
 
@@ -28,7 +29,7 @@ public class CarRequestDTO {
     public CarRequestDTO(Long id, String firstName, String lastName, String contactInfo, String carName, String carModel,
                          int year, String vehicleType, String fuelType, String transmission,
                          double mileage, int seatingCapacity, String color,
-                         List<String> imageUrls, LocalDateTime createdAt,Double cost, String location) {
+                         List<String> imageUrls, LocalDateTime createdAt,Double cost, String location, boolean available) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -46,6 +47,7 @@ public class CarRequestDTO {
         this.createdAt = createdAt;
         this.cost=cost;
         this.location=location;
+        this.available=available;
     }
 
 	public String getFirstName() {
@@ -179,6 +181,15 @@ public class CarRequestDTO {
 	public void setLocation(String location) {
 		this.location = location;
 	}
+	public boolean isAvailable() {
+		return available;
+	}
+	public void setAvailable(boolean available) {
+		this.available = available;
+	}
+	
+	
+	
 
 
     

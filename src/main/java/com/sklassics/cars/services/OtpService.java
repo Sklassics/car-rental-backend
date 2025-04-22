@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.sklassics.cars.entites.User;
+import com.sklassics.cars.exceptions.CustomExceptions.UserNotFoundException;
 import com.sklassics.cars.repositories.UserRepository;
 import com.sklassics.cars.services.utility.OtpCache;
 import com.sklassics.cars.services.utility.ResponseUtil;
@@ -26,6 +27,9 @@ public class OtpService {
 	
 	@Autowired
 	private OneDriveService oneDriveService;
+	
+	@Autowired
+	private JwtService jwtService;
 
 	private static final String DUMMY_OTP = "123456";
 	private final Map<String, OtpCache> otpCacheMap = new ConcurrentHashMap<>();
@@ -39,22 +43,32 @@ public class OtpService {
 	}
 
 	public ResponseEntity<?> validateMobileEmailOtp(String mobile, String otp) {
-		OtpCache cached = otpCacheMap.get(mobile);
-		if (cached == null) {
-			return ResponseEntity.badRequest().body(ResponseUtil.notFound("No OTP generated for this mobile number."));
-		}
-		if (cached.getOtp().equals(otp)) {
-			User user = new User();
-			user.setMobile(mobile);
-			user.setEmail(cached.getEmail());
-			
-			userRepository.save(user);
-			otpCacheMap.remove(mobile);
-			return ResponseEntity.ok(ResponseUtil.successMessage("OTP verified and user saved."));
-		} else {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseUtil.unauthorized("Invalid OTP."));
-		}
+	    OtpCache cached = otpCacheMap.get(mobile);
+	    if (cached == null) {
+	        return ResponseEntity.badRequest().body(ResponseUtil.notFound("No OTP generated for this mobile number."));
+	    }
+
+	    if (cached.getOtp().equals(otp)) {
+	        User user = new User();
+	        user.setMobile(mobile);
+	        user.setEmail(cached.getEmail());
+
+	        userRepository.save(user);
+	        otpCacheMap.remove(mobile);
+
+	        // Use saved user ID in the token
+	        Long userId = user.getId(); // Assuming ID is generated and set after save
+	        String token = jwtService.generateToken(mobile, "customer", userId);
+
+	        Map<String, Object> data = new HashMap<>();
+	        data.put("token", token);
+	        return ResponseEntity.ok(ResponseUtil.successWithData("OTP Verified Successfully !", data));
+	    } else {
+	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+	                .body(ResponseUtil.unauthorized("Invalid OTP."));
+	    }
 	}
+
 
 	public ResponseEntity<?> sendLoginOtp(String mobile) {
 		otpCache.put(mobile, DUMMY_OTP);
@@ -74,6 +88,12 @@ public class OtpService {
 		} else {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseUtil.unauthorized("Invalid OTP."));
 		}
+	}
+	
+	public Long getUserIdByMobile(String mobile) {
+	    return userRepository.findByMobile(mobile)
+	                         .map(User::getId)
+	                         .orElseThrow(() -> new UserNotFoundException("User not found with mobile: " + mobile));
 	}
 
 	public ResponseEntity<?> sendAadhaarOtp(String aadhaar) {

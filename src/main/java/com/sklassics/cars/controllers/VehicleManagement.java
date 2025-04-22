@@ -43,7 +43,7 @@ public class VehicleManagement {
                         .body(ResponseUtil.internalError("Car could not be saved"));
             }
 
-            return ResponseEntity.ok(ResponseUtil.successWithData("Car saved successfully", savedCar));
+            return ResponseEntity.ok(ResponseUtil.successMessage("Car saved successfully"));
 
         } catch (JsonProcessingException e) {
             return ResponseEntity.badRequest()

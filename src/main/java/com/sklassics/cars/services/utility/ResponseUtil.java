@@ -60,7 +60,6 @@ public class ResponseUtil {
         Map<String, Object> response = new HashMap<>();
         response.put("code", code);
         response.put("message", message);
-//      response.put("data", null);
         return response;
     }
 

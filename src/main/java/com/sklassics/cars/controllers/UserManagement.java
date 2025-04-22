@@ -31,7 +31,6 @@ public class UserManagement {
     
     @PostMapping("/auth/send-otp")
     public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> request) {
-    	
         String mobile = request.get("mobile");
         String email = request.get("email");
 
@@ -61,12 +60,11 @@ public class UserManagement {
         Optional<User> user = userRepository.findByMobile(mobile);
 
         if (user.isEmpty()) {
-            return ResponseEntity.ok(ResponseUtil.notFound("Mobile number not registered. Please register first."));
+            return ResponseEntity.status(404).body(ResponseUtil.notFound("Mobile number not registered. Please register first."));
         }
 
         return otpService.sendLoginOtp(mobile);
     }
-
 
     @PostMapping("/login/verify-otp")
     public ResponseEntity<?> loginVerifyOtp(@RequestBody Map<String, String> request) {
@@ -77,15 +75,15 @@ public class UserManagement {
 
         if (otpValidationResponse.getStatusCode().is2xxSuccessful()) {
             
+            Long userId = otpService.getUserIdByMobile(mobile); 
+
             String role = "customer";
+            String token = jwtService.generateToken(mobile, role, userId);
 
-            String token = jwtService.generateToken(mobile, role);
+            Map<String, Object> data = new HashMap<>();
+            data.put("token", token);
 
-            Map<String, Object> responseBody = new HashMap<>();
-            responseBody.put("message", "Login successful.");
-            responseBody.put("token", token);
-
-            return ResponseEntity.ok(responseBody);
+            return ResponseEntity.ok(ResponseUtil.successWithData("Login successful.", data));
         } else {
             return otpValidationResponse;
         }
@@ -132,7 +130,7 @@ public class UserManagement {
         }
     }
     
- // GET user profile by ID
+    // GET user profile by ID
     @GetMapping("/users/{id}")
     public ResponseEntity<?> getUserProfile(@PathVariable Long id) {
         Optional<User> userOptional = userRepository.findById(id);
@@ -145,7 +143,6 @@ public class UserManagement {
         return ResponseEntity.ok(
                 ResponseUtil.successWithData("User profile fetched successfully", userOptional.get()));
     }
-
 
     // PUT update user profile by ID
     @PutMapping("/users/{id}")
@@ -170,12 +167,11 @@ public class UserManagement {
         if (updates.containsKey("fullName")) {
             user.setFullName(updates.get("fullName"));
         }
-        
         if (updates.containsKey("location")) {
             user.setLocation(updates.get("location"));
         }
-       
-        {
+
+        if (updates.containsKey("submittedAt")) {
             try {
                 user.setSubmittedAt(LocalDate.parse(updates.get("submittedAt")));
             } catch (Exception e) {
@@ -186,6 +182,4 @@ public class UserManagement {
         userRepository.save(user);
         return ResponseEntity.ok(ResponseUtil.successMessage("User profile updated successfully."));
     }
-
-
 }

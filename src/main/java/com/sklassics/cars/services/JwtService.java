@@ -18,12 +18,13 @@ public class JwtService {
     private static final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     private static final long EXPIRATION_TIME = 1000 * 60 * 60; // 1 hour
 
-    // ✅ Generate JWT token with userId & mobileNumber
-    public String generateToken(String mobileNumber, String role) {
+    
+    public String generateToken(String mobileNumber, String role, Long userId) {
         Map<String, Object> claims = new HashMap<>();
         
         claims.put("mobileNumber", mobileNumber);
         claims.put("role", role);
+        claims.put("userId", userId);
 
         String token = Jwts.builder()
                 .setClaims(claims)
@@ -95,4 +96,12 @@ public class JwtService {
         System.out.println("Extracted mobile number from token: " + mobileNumber);
         return mobileNumber;
     }
+    
+    public long extractUserId(String token) {
+        Claims claims = getClaimsFromToken(token);
+        Long userId = (claims != null) ? claims.get("userId", Long.class) : null;
+        System.out.println("Extracted userId from token: " + userId);
+        return userId ;
+    }
+
 }

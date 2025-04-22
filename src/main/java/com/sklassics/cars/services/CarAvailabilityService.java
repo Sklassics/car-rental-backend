@@ -28,7 +28,7 @@ public class CarAvailabilityService {
             blockedDates.add(new BookedRange(r.getFromDate(), r.getToDate()));
         }
 
-        List<Booking> bookings = bookingRepo.findActiveBookingsByCarId(carId);
+        List<Booking> bookings = bookingRepo.findPaidBookingsByCarId(carId);
         for (Booking b : bookings) {
             blockedDates.add(new BookedRange(b.getFromDate(), b.getToDate()));
         }
