@@ -29,5 +29,17 @@ public class CustomExceptions {
     }
     
     
+    public static class BookingCreationException extends RuntimeException {
+    	private static final long serialVersionUID = 1L;
+        public BookingCreationException(String message) {
+            super(message);
+        }
+    }
+    
+    
+    
+    
+    
+    
 
 }

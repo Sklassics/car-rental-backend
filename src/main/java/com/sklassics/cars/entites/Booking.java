@@ -15,8 +15,7 @@ public class Booking {
 
 	private Long userId;
 
-	private String mobile;
-	private String email;
+
 
 	private LocalDate fromDate;
 	private LocalDate toDate;
@@ -55,21 +54,6 @@ public class Booking {
 		this.carId = carId;
 	}
 
-	public String getMobile() {
-		return mobile;
-	}
-
-	public void setMobile(String mobile) {
-		this.mobile = mobile;
-	}
-
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
 
 	public LocalDate getFromDate() {
 		return fromDate;

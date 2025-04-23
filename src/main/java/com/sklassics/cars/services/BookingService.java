@@ -24,30 +24,33 @@ public class BookingService {
     
     
 
-    public Booking createBooking(Booking booking,Long userId) {
-    	
-    	Optional<Transaction> transaction = transactionRepository.findByRazorpayPaymentId(booking.getPaymentId());
+	public Booking createBooking(Booking booking, Long userId) {
+	    try {
+	        Booking newBooking = new Booking();
+	        newBooking.setCarId(booking.getCarId());
+	        newBooking.setFromDate(booking.getFromDate());
+	        newBooking.setToDate(booking.getToDate());
+	        newBooking.setPickupTime(booking.getPickupTime());
+	        newBooking.setDropTime(booking.getDropTime());
+	        newBooking.setPaymentId(booking.getPaymentId());
+	        newBooking.setAgreedToTerms(booking.isAgreedToTerms());
+	        newBooking.setUserId(userId);
 
-    	if (transaction.isPresent()) {
-    	    
-    	    booking.setStatus(transaction.get().getOrderStatus());
-    	}
+	        // Set booking status based on transaction data
+	        Optional<Transaction> transaction = transactionRepository.findByRazorpayPaymentId(booking.getPaymentId());
+	        if (transaction.isPresent()) {
+	            newBooking.setStatus(transaction.get().getOrderStatus());
+	            System.out.println("Booking status set to: " + transaction.get().getOrderStatus());
+	        }
 
-    	Booking newBooking = new Booking();
-        newBooking.setCarId(booking.getCarId());
-        newBooking.setMobile(booking.getMobile());
-        newBooking.setEmail(booking.getEmail());
-        newBooking.setFromDate(booking.getFromDate());
-        newBooking.setToDate(booking.getToDate());
-        newBooking.setPickupTime(booking.getPickupTime());
-        newBooking.setDropTime(booking.getDropTime());
-        newBooking.setPaymentId(booking.getPaymentId());
-        newBooking.setAgreedToTerms(booking.isAgreedToTerms());
-        newBooking.setUserId(userId);
-        
-        
-        return bookingRepository.save(booking);
-    }
+	        // Save newBooking instead of booking
+	        return bookingRepository.save(newBooking);
+	    } catch (Exception e) {
+	        System.out.println("Error occurred while creating the booking: " + e.getMessage());
+	        throw e;
+	    }
+	}
+
 
     public Booking getBooking(Long id) {
         return bookingRepository.findById(id).orElse(null);

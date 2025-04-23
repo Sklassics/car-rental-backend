@@ -1,11 +1,15 @@
 package com.sklassics.cars.entites;
 
 import java.time.LocalDate;
+import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -30,6 +34,9 @@ public class User {
 	private LocalDate updatedAt;
 
 	private LocalDate accountCreatedAt;
+	
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<Reservation> reservations;
 
 	public Long getId() {
 		return id;
@@ -127,4 +134,22 @@ public class User {
 		this.accountCreatedAt = accountCreatedAt;
 	}
 
+	public List<Reservation> getReservations() {
+		return reservations;
+	}
+
+	public void setReservations(List<Reservation> reservations) {
+		this.reservations = reservations;
+	}
+
+	
+//	public List<Booking> getBookings() {
+//		return bookings;
+//	}
+//
+//	public void setBookings(List<Booking> bookings) {
+//		this.bookings = bookings;
+//	}
+	
+	
 }

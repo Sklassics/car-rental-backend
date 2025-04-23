@@ -13,6 +13,7 @@ public class ResponseUtil {
         public static final int UNAUTHORIZED = 1003;
         public static final int INTERNAL_ERROR = 1004;
         public static final int CONFLICT = 1005;
+        public static final int ALREADY_EXIST=1006;
         
     }
 
@@ -82,5 +83,9 @@ public class ResponseUtil {
 
     public static Map<String, Object> conflict(String message) {
         return error(ResponseCodes.CONFLICT, message);
+    }
+    
+    public static Map<String, Object> alreadyExist(String message) {
+        return error(ResponseCodes.ALREADY_EXIST, message);
     }
 }

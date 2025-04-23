@@ -37,10 +37,21 @@ public class OtpService {
 	private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
 	public ResponseEntity<?> sendMobileEmailOtp(String mobile, String email) {
-		otpCacheMap.put(mobile, new OtpCache(email, DUMMY_OTP));
-		System.out.println("Storing OTP " + DUMMY_OTP + " for mobile: " + mobile + ", email: " + email);
-		return ResponseEntity.ok(ResponseUtil.successMessage("OTP has been sent to mobile number: " + mobile));
+	    // Check if the mobile number already exists in the database
+	    boolean isMobileExists = userRepository.existsByMobile(mobile); // Assuming userRepository exists and has this method
+
+	    if (isMobileExists) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+	                .body(ResponseUtil.alreadyExist("Mobile number already exists in the database: " + mobile));
+	    }
+
+	    // If the mobile number doesn't exist in the database, proceed with OTP sending
+	    otpCacheMap.put(mobile, new OtpCache(email, DUMMY_OTP));
+	    System.out.println("Storing OTP " + DUMMY_OTP + " for mobile: " + mobile + ", email: " + email);
+
+	    return ResponseEntity.ok(ResponseUtil.successMessage("OTP has been sent to mobile number: " + mobile));
 	}
+
 
 	public ResponseEntity<?> validateMobileEmailOtp(String mobile, String otp) {
 	    OtpCache cached = otpCacheMap.get(mobile);

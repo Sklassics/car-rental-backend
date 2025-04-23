@@ -47,9 +47,17 @@ public class BookingController {
 
             Long userId = jwtService.extractUserId(token);
             
+            System.out.println("token ===>>......." + token);
+            System.out.println("userID ===>>......." + userId);
+            
             // Proceed to create the booking
             Booking createdBooking = bookingService.createBooking(booking, userId);
-            return ResponseUtil.successWithData("Booking created successfully", createdBooking);
+            
+            if(createdBooking == null)
+            {
+            	 return ResponseUtil.internalError("Error while creating the booking");
+            }
+            return ResponseUtil.successMessage("Booking created successfully");
 
         } catch (Exception e) {
             return ResponseUtil.internalError("An unexpected error occurred: " + e.getMessage());

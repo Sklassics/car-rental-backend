@@ -27,6 +27,10 @@ public class Reservation {
     private String status;
 
     private LocalDateTime createdAt;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id") 
+    private User user;
 
     @PrePersist
     protected void onCreate() {
@@ -122,4 +126,15 @@ public class Reservation {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
+
+
+    
 }
