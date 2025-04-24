@@ -12,9 +12,9 @@ public class Reservation {
     private Long id;
 
     private Long carId;
+    
+    private Long userId; 
 
-    private String mobile;
-    private String email;
 
     private LocalDate fromDate;
     private LocalDate toDate;
@@ -28,9 +28,7 @@ public class Reservation {
 
     private LocalDateTime createdAt;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id") 
-    private User user;
+ 
 
     @PrePersist
     protected void onCreate() {
@@ -53,22 +51,6 @@ public class Reservation {
 
     public void setCarId(Long carId) {
         this.carId = carId;
-    }
-
-    public String getMobile() {
-        return mobile;
-    }
-
-    public void setMobile(String mobile) {
-        this.mobile = mobile;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public LocalDate getFromDate() {
@@ -127,14 +109,15 @@ public class Reservation {
         this.createdAt = createdAt;
     }
 
-	public User getUser() {
-		return user;
+
+	public Long getUserId() {
+		return userId;
 	}
 
-	public void setUser(User user) {
-		this.user = user;
+	public void setUserId(Long userId) {
+		this.userId = userId;
 	}
 
-
+	
     
 }

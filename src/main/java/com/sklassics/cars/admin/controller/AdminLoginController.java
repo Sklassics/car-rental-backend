@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import com.sklassics.cars.admin.entites.Admin;
 import com.sklassics.cars.admin.repositories.AdminRepository;
 import com.sklassics.cars.dtos.MobileNoDTO;
+import com.sklassics.cars.services.JwtService;
 import com.sklassics.cars.services.OtpService;
 import com.sklassics.cars.services.utility.ResponseUtil;
 
@@ -20,8 +21,8 @@ public class AdminLoginController {
     @Autowired
     private OtpService otpService;
 
-//    @Autowired
-//    private JwtService jwtService;
+    @Autowired
+    private JwtService jwtService;
 
     @Autowired
     private AdminRepository adminRepository;
@@ -71,12 +72,13 @@ public class AdminLoginController {
                 return ResponseEntity.status(validationResponse.getStatusCode())
                         .body(ResponseUtil.unauthorized(message));
             }
+            
+            Long userId = otpService.getAdminByMobile(mobileNumber); 
 
-            // String token = jwtService.generateToken(mobileNumber, "admin");
-            String dummyToken = "generated.jwt.token"; // replace with real token
+            String token = jwtService.generateToken(mobileNumber, "admin", userId);
 
             return ResponseEntity.ok(
-                    ResponseUtil.successWithData("OTP Verified Successfully", Map.of("token", dummyToken))
+                    ResponseUtil.successWithData("OTP Verified Successfully", Map.of("token", token))
             );
 
         } catch (Exception e) {

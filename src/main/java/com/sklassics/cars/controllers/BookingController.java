@@ -100,7 +100,9 @@ public class BookingController {
             Long userId = jwtService.extractUserId(token);
             System.out.println("Extracted user ID from token: " + userId);
 
-            List<Booking> bookings = bookingService.getBookingsByUserId(userId);
+            List<Map<String, Object>> bookings = bookingService.getBookingsByUserId(userId);
+           
+
             System.out.println("Bookings fetched for user ID: " + userId);
 
             return ResponseEntity.ok(ResponseUtil.successWithData("Bookings fetched successfully", bookings));

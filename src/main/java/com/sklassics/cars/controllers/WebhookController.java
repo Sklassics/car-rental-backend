@@ -166,11 +166,6 @@ public class WebhookController {
             amountDue = order.getLong("amount_due");
             orderReceipt = order.optString("receipt");
             orderStatus = order.getString("status");
-
-            // Extract notes
-            JSONObject notes = order.optJSONObject("notes");
-            notesEmail = notes != null ? notes.optString("email") : null;
-            notesMobile = notes != null ? notes.optString("mobile") : null;
         }
 
         // Extract acquirer data
@@ -202,8 +197,6 @@ public class WebhookController {
                 amountDue, 
                 orderReceipt, 
                 orderStatus, 
-                notesEmail, 
-                notesMobile, 
                 acquirerAuthCode, 
                 payload
         );

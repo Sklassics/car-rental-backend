@@ -3,13 +3,19 @@ package com.sklassics.cars.services;
 import com.sklassics.cars.entites.Booking;
 import com.sklassics.cars.entites.Transaction;
 import com.sklassics.cars.repositories.BookingRepository;
+import com.sklassics.cars.repositories.CarRepository;
 import com.sklassics.cars.repositories.TransactionRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
@@ -20,6 +26,12 @@ public class BookingService {
 	
 	@Autowired
     private TransactionRepository transactionRepository;
+	
+	@Autowired
+	private CarRepository carRepository;
+	
+	@Autowired
+    private OneDriveService oneDriveService;
 
     
     
@@ -51,28 +63,78 @@ public class BookingService {
 	    }
 	}
 
+	public List<Map<String, Object>> getBookingsByUserId(Long userId) {
+	    List<Booking> bookings = bookingRepository.findByUserId(userId);
+	    List<Map<String, Object>> enrichedBookings = new ArrayList<>();
 
-    public Booking getBooking(Long id) {
-        return bookingRepository.findById(id).orElse(null);
-    }
+	    for (Booking booking : bookings) {
+	        Map<String, Object> bookingMap = new HashMap<>();
+	        bookingMap.put("id", booking.getId());
+	        bookingMap.put("carId", booking.getCarId());
+	        bookingMap.put("userId", booking.getUserId());
+	        bookingMap.put("fromDate", booking.getFromDate());
+	        bookingMap.put("toDate", booking.getToDate());
+	        bookingMap.put("pickupTime", booking.getPickupTime());
+	        bookingMap.put("dropTime", booking.getDropTime());
+	        bookingMap.put("paymentId", booking.getPaymentId());
+	        bookingMap.put("status", booking.getStatus());
+	        bookingMap.put("agreedToTerms", booking.isAgreedToTerms());
+	        bookingMap.put("createdAt", booking.getCreatedAt());
 
-    public List<Booking> getAllBookings() {
-        return bookingRepository.findAll();
-    }
+	        carRepository.findById(booking.getCarId()).ifPresent(car -> {
+	            Map<String, Object> carDetails = new HashMap<>();
+	            carDetails.put("carName", car.getCarName());
+	            carDetails.put("carModel", car.getCarModel());
+	            carDetails.put("location", car.getLocation());
 
-    public List<Booking> getBookingsByUserId(Long userId) {
-        return bookingRepository.findByUserId(userId);
-    }
+	            // Ensure imageUrls is List<String>
+	            List<String> secureImageUrls = car.getImageUrls().stream()
+	                .map((String url) -> {  
+	                    try {
+	                        String path = url.substring(url.indexOf("/root:/") + 7);
+	                        return oneDriveService.generateDirectDownloadLink(path);
+	                    } catch (Exception e) {
+	                        System.err.println("Error generating secure URL for " + url + ": " + e.getMessage());
+	                        return null;
+	                    }
+	                })
+	                .filter(Objects::nonNull)
+	                .collect(Collectors.toList());
 
-    public boolean cancelBooking(Long id) {
-        Optional<Booking> optionalBooking = bookingRepository.findById(id);
-        if (optionalBooking.isPresent()) {
-            Booking booking = optionalBooking.get();
-            booking.setStatus("CANCELLED");
-            bookingRepository.save(booking);
-            return true;
-        }
-        return false;
-    }
+	            carDetails.put("imageUrls", secureImageUrls);
+
+	            bookingMap.put("car", carDetails);
+	        });
+
+	        enrichedBookings.add(bookingMap);
+	    }
+
+	    return enrichedBookings;
+	}
+
+
+	
+//    public Booking getBooking(Long id) {
+//        return bookingRepository.findById(id).orElse(null);
+//    }
+//
+//    public List<Booking> getAllBookings() {
+//        return bookingRepository.findAll();
+//    }
+
+//    public List<Booking> getBookingsByUserId(Long userId) {
+//        return bookingRepository.findByUserId(userId);
+//    }
+
+//    public boolean cancelBooking(Long id) {
+//        Optional<Booking> optionalBooking = bookingRepository.findById(id);
+//        if (optionalBooking.isPresent()) {
+//            Booking booking = optionalBooking.get();
+//            booking.setStatus("CANCELLED");
+//            bookingRepository.save(booking);
+//            return true;
+//        }
+//        return false;
+//    }
 
 }

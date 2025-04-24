@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.sklassics.cars.admin.entites.Admin;
+import com.sklassics.cars.admin.repositories.AdminRepository;
 import com.sklassics.cars.entites.User;
 import com.sklassics.cars.exceptions.CustomExceptions.UserNotFoundException;
 import com.sklassics.cars.repositories.UserRepository;
@@ -25,9 +28,13 @@ public class OtpService {
 	@Autowired
 	private UserRepository userRepository;
 	
+	
+	@Autowired
+	private AdminRepository adminRepository;
+
 	@Autowired
 	private OneDriveService oneDriveService;
-	
+
 	@Autowired
 	private JwtService jwtService;
 
@@ -37,49 +44,47 @@ public class OtpService {
 	private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
 	public ResponseEntity<?> sendMobileEmailOtp(String mobile, String email) {
-	    // Check if the mobile number already exists in the database
-	    boolean isMobileExists = userRepository.existsByMobile(mobile); // Assuming userRepository exists and has this method
+		// Check if the mobile number already exists in the database
+		boolean isMobileExists = userRepository.existsByMobile(mobile); // Assuming userRepository exists and has this
+																		// method
 
-	    if (isMobileExists) {
-	        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-	                .body(ResponseUtil.alreadyExist("Mobile number already exists in the database: " + mobile));
-	    }
+		if (isMobileExists) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+					.body(ResponseUtil.alreadyExist("Mobile number already exist. Please Login !!: " + mobile));
+		}
 
-	    // If the mobile number doesn't exist in the database, proceed with OTP sending
-	    otpCacheMap.put(mobile, new OtpCache(email, DUMMY_OTP));
-	    System.out.println("Storing OTP " + DUMMY_OTP + " for mobile: " + mobile + ", email: " + email);
+		// If the mobile number doesn't exist in the database, proceed with OTP sending
+		otpCacheMap.put(mobile, new OtpCache(email, DUMMY_OTP));
+		System.out.println("Storing OTP " + DUMMY_OTP + " for mobile: " + mobile + ", email: " + email);
 
-	    return ResponseEntity.ok(ResponseUtil.successMessage("OTP has been sent to mobile number: " + mobile));
+		return ResponseEntity.ok(ResponseUtil.successMessage("OTP has been sent to mobile number: " + mobile));
 	}
-
 
 	public ResponseEntity<?> validateMobileEmailOtp(String mobile, String otp) {
-	    OtpCache cached = otpCacheMap.get(mobile);
-	    if (cached == null) {
-	        return ResponseEntity.badRequest().body(ResponseUtil.notFound("No OTP generated for this mobile number."));
-	    }
+		OtpCache cached = otpCacheMap.get(mobile);
+		if (cached == null) {
+			return ResponseEntity.badRequest().body(ResponseUtil.notFound("No OTP generated for this mobile number."));
+		}
 
-	    if (cached.getOtp().equals(otp)) {
-	        User user = new User();
-	        user.setMobile(mobile);
-	        user.setEmail(cached.getEmail());
+		if (cached.getOtp().equals(otp)) {
+			User user = new User();
+			user.setMobile(mobile);
+			user.setEmail(cached.getEmail());
 
-	        userRepository.save(user);
-	        otpCacheMap.remove(mobile);
+			userRepository.save(user);
+			otpCacheMap.remove(mobile);
 
-	        // Use saved user ID in the token
-	        Long userId = user.getId(); // Assuming ID is generated and set after save
-	        String token = jwtService.generateToken(mobile, "customer", userId);
+			// Use saved user ID in the token
+			Long userId = user.getId(); // Assuming ID is generated and set after save
+			String token = jwtService.generateToken(mobile, "customer", userId);
 
-	        Map<String, Object> data = new HashMap<>();
-	        data.put("token", token);
-	        return ResponseEntity.ok(ResponseUtil.successWithData("OTP Verified Successfully !", data));
-	    } else {
-	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-	                .body(ResponseUtil.unauthorized("Invalid OTP."));
-	    }
+			Map<String, Object> data = new HashMap<>();
+			data.put("token", token);
+			return ResponseEntity.ok(ResponseUtil.successWithData("OTP Verified Successfully !", data));
+		} else {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseUtil.unauthorized("Invalid OTP."));
+		}
 	}
-
 
 	public ResponseEntity<?> sendLoginOtp(String mobile) {
 		otpCache.put(mobile, DUMMY_OTP);
@@ -100,12 +105,13 @@ public class OtpService {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseUtil.unauthorized("Invalid OTP."));
 		}
 	}
-	
-	public Long getUserIdByMobile(String mobile) {
-	    return userRepository.findByMobile(mobile)
-	                         .map(User::getId)
-	                         .orElseThrow(() -> new UserNotFoundException("User not found with mobile: " + mobile));
+
+	public Long getAdminByMobile(String mobile) {
+		return adminRepository.findByMobileNumber(mobile).map(Admin::getId)
+				.orElseThrow(() -> new UserNotFoundException("User not found with mobile: " + mobile));
 	}
+	
+	
 
 	public ResponseEntity<?> sendAadhaarOtp(String aadhaar) {
 		otpCache.put(aadhaar, DUMMY_OTP);
@@ -121,55 +127,62 @@ public class OtpService {
 			return ResponseEntity.status(401).body(ResponseUtil.unauthorized("Invalid OTP."));
 		}
 		otpCache.remove(aadhaar);
+		
+		
 		return ResponseEntity.ok(ResponseUtil.successMessage("OTP validated successfully for Aadhaar."));
 	}
 
 	private String saveFileToOneDrive(MultipartFile file, String folder) {
-	    try {
-	        String fileName = file.getOriginalFilename();
-	        System.out.println("Uploading file to OneDrive - Folder: " + folder + ", File: " + fileName);
+		try {
+			String fileName = file.getOriginalFilename();
+			System.out.println("Uploading file to OneDrive - Folder: " + folder + ", File: " + fileName);
 
-	        // Replace with your actual OneDrive service logic
-	        String oneDriveFileUrl = oneDriveService.uploadFile(file, folder, fileName);  // This returns view/download URL
+			// Replace with your actual OneDrive service logic
+			String oneDriveFileUrl = oneDriveService.uploadFile(file, folder, fileName); 
+																							
 
-	        System.out.println("File uploaded to OneDrive. Accessible at: " + oneDriveFileUrl);
-	        return oneDriveFileUrl;
-	    } catch (Exception e) {
-	        System.out.println("Error uploading to OneDrive: " + e.getMessage());
-	        throw new RuntimeException("OneDrive upload failed", e);
-	    }
+			System.out.println("File uploaded to OneDrive. Accessible at: " + oneDriveFileUrl);
+			return oneDriveFileUrl;
+		} catch (Exception e) {
+			System.out.println("Error uploading to OneDrive: " + e.getMessage());
+			throw new RuntimeException("OneDrive upload failed", e);
+		}
 	}
-	
-	
-	public void registerUser(String name, String location, String aadharNumber, MultipartFile aadharFile,
-			MultipartFile drivingLicenseFile) {
 
-	System.out.println("Starting user registration...");
-	System.out.println(
-			"Received details - Name: " + name + ", Location: " + location + ", Aadhaar Number: " + aadharNumber);
-	System.out.println("Aadhaar File Original Name: " + aadharFile.getOriginalFilename());
-	System.out.println("Driving License File Original Name: " + drivingLicenseFile.getOriginalFilename());
+	public void registerUser(String name, String address, String aadharNumber, MultipartFile aadharFile,
+			MultipartFile drivingLicenseFile, Long userId) {
 
-	String aadharUrl = saveFileToOneDrive(aadharFile, "aadhaar");
-	System.out.println("Aadhaar file uploaded to OneDrive at: " + aadharUrl);
+		System.out.println("Starting user registration...");
+		System.out.println(
+				"Received details - Name: " + name + ", Location: " + address + ", Aadhaar Number: " + aadharNumber);
+		System.out.println("Aadhaar File Original Name: " + aadharFile.getOriginalFilename());
+		System.out.println("Driving License File Original Name: " + drivingLicenseFile.getOriginalFilename());
 
-	String licenseUrl = saveFileToOneDrive(drivingLicenseFile, "license");
-	System.out.println("License file uploaded to OneDrive at: " + licenseUrl);
 
-	User user = new User();
-	user.setFullName(name);
-	user.setLocation(location);
-	user.setAadhaarNumber(aadharNumber);
-	user.setAadhaarFilePath(aadharUrl);
-	user.setLicenseFilePath(licenseUrl);
-	user.setIsAdminVerifiedDocuments("PENDING");
-	user.setSubmittedAt(LocalDate.now());
+		String aadharUrl = saveFileToOneDrive(aadharFile, "aadhaar");
+		System.out.println("Aadhaar file uploaded to OneDrive at: " + aadharUrl);
 
-	System.out.println("Saving user to database: " + user);
-	userRepository.save(user);
-	System.out.println("User registration completed successfully.");
-}
+		String licenseUrl = saveFileToOneDrive(drivingLicenseFile, "license");
+		System.out.println("License file uploaded to OneDrive at: " + licenseUrl);
 
+		Optional<User> optionalUser = userRepository.findById(userId);
+		if (optionalUser.isEmpty()) {
+			throw new UserNotFoundException("User not found with ID: " + userId);
+		}
+
+		User user = optionalUser.get();
+		user.setFullName(name);
+		user.setAddress(address);
+		user.setAadhaarNumber(aadharNumber);
+		user.setAadhaarFilePath(aadharUrl);
+		user.setLicenseFilePath(licenseUrl);
+		user.setIsAdminVerifiedDocuments("PENDING");
+		user.setSubmittedAt(LocalDate.now());
+
+		System.out.println("Updating user in database: " + user);
+		userRepository.save(user);
+		System.out.println("User registration completed successfully.");
+	}
 
 	public ResponseEntity<Map<String, Object>> sendOtp(String phoneNumber) {
 		Map<String, Object> response = new HashMap<>();
@@ -214,6 +227,11 @@ public class OtpService {
 		otpCache.remove(phoneNumber);
 		response.put("message", "OTP verified successfully.");
 		return ResponseEntity.ok(ResponseUtil.successWithData("OTP verified successfully.", response));
+	}
+	
+	public Long getUserIdByMobile(String mobile) {
+		return userRepository.findByMobile(mobile).map(User::getId)
+				.orElseThrow(() -> new UserNotFoundException("User not found with mobile: " + mobile));
 	}
 
 	private void scheduleOtpExpiration(String key, int minutes) {

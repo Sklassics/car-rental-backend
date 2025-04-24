@@ -41,9 +41,6 @@ public class Transaction {
     private String orderReceipt;
     private String orderStatus;
 
-    // Notes
-    private String notesEmail;
-    private String notesMobile;
 
     // Acquirer Data
     private String acquirerAuthCode;
@@ -59,7 +56,7 @@ public class Transaction {
     public Transaction() {};
     
     
-    public Transaction(String razorpayOrderId, String razorpayPaymentId, String status, String email, String contact, Long amount, Long fee, Long tax, String paymentMethod, Long createdAt, String cardId, String cardLast4, String cardNetwork, String cardType, String cardIssuer, boolean isCardInternational, boolean isCardEMI, String orderId, Long orderAmount, Long amountPaid, Long amountDue, String orderReceipt, String orderStatus, String notesEmail, String notesMobile, String acquirerAuthCode, String fullPayload) {
+    public Transaction(String razorpayOrderId, String razorpayPaymentId, String status, String email, String contact, Long amount, Long fee, Long tax, String paymentMethod, Long createdAt, String cardId, String cardLast4, String cardNetwork, String cardType, String cardIssuer, boolean isCardInternational, boolean isCardEMI, String orderId, Long orderAmount, Long amountPaid, Long amountDue, String orderReceipt, String orderStatus, String acquirerAuthCode, String fullPayload) {
         this.razorpayOrderId = razorpayOrderId;
         this.razorpayPaymentId = razorpayPaymentId;
         this.status = status;
@@ -83,8 +80,7 @@ public class Transaction {
         this.amountDue = amountDue;
         this.orderReceipt = orderReceipt;
         this.orderStatus = orderStatus;
-        this.notesEmail = notesEmail;
-        this.notesMobile = notesMobile;
+
         this.acquirerAuthCode = acquirerAuthCode;
         this.fullPayload = fullPayload;
         
@@ -280,22 +276,6 @@ public class Transaction {
 
 	public void setOrderStatus(String orderStatus) {
 		this.orderStatus = orderStatus;
-	}
-
-	public String getNotesEmail() {
-		return notesEmail;
-	}
-
-	public void setNotesEmail(String notesEmail) {
-		this.notesEmail = notesEmail;
-	}
-
-	public String getNotesMobile() {
-		return notesMobile;
-	}
-
-	public void setNotesMobile(String notesMobile) {
-		this.notesMobile = notesMobile;
 	}
 
 	public String getAcquirerAuthCode() {

@@ -10,7 +10,10 @@ import com.sklassics.cars.entites.User;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByMobile(String mobile);
     boolean existsByMobile(String mobile);
-    List<User> findByIsAdminVerifiedDocuments(String status);
+    
+    List<User> findByIsAdminVerifiedDocuments(String isAdminVerifiedDocuments);
+    
+    Optional<User> findByAddress(String address);
 
 }
 

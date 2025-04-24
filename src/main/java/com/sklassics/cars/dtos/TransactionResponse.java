@@ -31,10 +31,7 @@ public class TransactionResponse {
     private Long amountPaid;
     private Long amountDue;
     private String orderReceipt;
-    private String orderStatus;
-
-    private String notesEmail;
-    private String notesMobile;
+    private String orderStatus;;
 
     private String acquirerAuthCode;
     private String refundStatus;
@@ -67,10 +64,6 @@ public class TransactionResponse {
         this.amountPaid = t.getAmountPaid();
         this.amountDue = t.getAmountDue();
         this.orderReceipt = t.getOrderReceipt();
-        this.orderStatus = t.getOrderStatus();
-
-        this.notesEmail = t.getNotesEmail();
-        this.notesMobile = t.getNotesMobile();
 
         this.acquirerAuthCode = t.getAcquirerAuthCode();
         this.refundStatus = t.getRefundStatus();
@@ -271,21 +264,6 @@ public class TransactionResponse {
 		this.orderStatus = orderStatus;
 	}
 
-	public String getNotesEmail() {
-		return notesEmail;
-	}
-
-	public void setNotesEmail(String notesEmail) {
-		this.notesEmail = notesEmail;
-	}
-
-	public String getNotesMobile() {
-		return notesMobile;
-	}
-
-	public void setNotesMobile(String notesMobile) {
-		this.notesMobile = notesMobile;
-	}
 
 	public String getAcquirerAuthCode() {
 		return acquirerAuthCode;
@@ -311,5 +289,4 @@ public class TransactionResponse {
 		this.fullPayload = fullPayload;
 	}
 
-    // Add getters if needed for serialization
 }

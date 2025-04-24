@@ -435,6 +435,34 @@
 	        // Return the Microsoft Graph API path to the uploaded file
 	        return String.format("https://graph.microsoft.com/v1.0/users/%s/drive/root:/%s", userEmail, fullUploadPath);
 	    }
+	    
+	    public String convertFileToBase64(String filePath) {
+	        try {
+	            String accessToken = getAccessToken();  // Make sure you have a method to fetch the access token
+	            HttpHeaders headers = new HttpHeaders();
+	            headers.set("Authorization", "Bearer " + accessToken);
+	            HttpEntity<String> entity = new HttpEntity<>(headers);
+	            RestTemplate restTemplate = new RestTemplate();
+
+	            ResponseEntity<byte[]> response = restTemplate.exchange(filePath, HttpMethod.GET, entity, byte[].class);
+
+	            if (response.getBody() != null) {
+	                String contentType = response.getHeaders().getContentType().toString();
+
+	                // Prefix for Base64 encoding (image data)
+	                String base64Prefix = "data:" + contentType + ";base64,";
+	                return base64Prefix + Base64.getEncoder().encodeToString(response.getBody());
+	            } else {
+	                throw new RuntimeException("Failed to fetch file from OneDrive: " + filePath);
+	            }
+	        } catch (RuntimeException e) {
+	            System.err.println("Error converting file to Base64: " + filePath + " - " + e.getMessage());
+	            return "Error converting file to Base64";  // Return an error string or handle accordingly
+	        } catch (Exception e) {
+	            System.err.println("Unexpected error occurred while converting file to Base64: " + filePath + " - " + e.getMessage());
+	            return "Error converting file to Base64";  // Return an error string or handle accordingly
+	        }
+	    }
 
 	
 	
