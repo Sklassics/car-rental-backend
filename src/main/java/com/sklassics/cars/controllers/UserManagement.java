@@ -91,7 +91,9 @@ public class UserManagement {
             // Create a response map with token and pending status
             Map<String, Object> data = new HashMap<>();
             data.put("token", token);
-            data.put("pending", "PENDING".equalsIgnoreCase(user.getIsAdminVerifiedDocuments()));
+            data.put("isRegistered", user.getAadhaarNumber() != null && !user.getAadhaarNumber().isEmpty());
+            data.put("adminApproval", user.getIsAdminVerifiedDocuments());
+         
 
             return ResponseEntity.ok(ResponseUtil.successWithData("Login successful.", data));
         } else {

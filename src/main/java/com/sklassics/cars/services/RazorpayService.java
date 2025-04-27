@@ -51,7 +51,7 @@ public class RazorpayService {
     @Value("${razorpay.keySecret}")
     private String keySecret;
 
-    public Map<String, Object> createOrder(String mobile, String email, double amount) throws RazorpayException {
+    public Map<String, Object> createOrder( double amount) throws RazorpayException {
         RazorpayClient client = new RazorpayClient(keyId, keySecret);
 
         String shortReceipt = "rct_" + UUID.randomUUID().toString().replace("-", "").substring(0, 30);
@@ -62,10 +62,6 @@ public class RazorpayService {
         orderRequest.put("receipt", shortReceipt);
         orderRequest.put("payment_capture", 1);
 
-        JSONObject notes = new JSONObject();
-        notes.put("mobile", mobile);
-        notes.put("email", email);
-        orderRequest.put("notes", notes); // ✅ include in the order
 
         Order order = client.orders.create(orderRequest);
 

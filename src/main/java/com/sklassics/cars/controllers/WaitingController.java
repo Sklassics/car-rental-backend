@@ -44,7 +44,11 @@ public class WaitingController {
             if ("PENDING".equalsIgnoreCase(user.getIsAdminVerifiedDocuments())) {
                 return ResponseEntity.ok(ResponseUtil.underVerification("Documents are under verification"));
             }
+
             
+            if ("REJECTED".equalsIgnoreCase(user.getIsAdminVerifiedDocuments())) {
+                return ResponseEntity.ok(ResponseUtil.rejected("Application rejected !! Re-apply with valid documents"));
+            }
             
             return ResponseEntity.ok(ResponseUtil.successMessage("Documents Verified Successfully !!"));
 

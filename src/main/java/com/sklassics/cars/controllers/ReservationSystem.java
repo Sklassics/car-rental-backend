@@ -114,7 +114,7 @@ public class ReservationSystem {
             if (reservations != null && !reservations.isEmpty()) {
                 return ResponseEntity.ok(ResponseUtil.successWithData("Reservations fetched successfully!", reservations));
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                return ResponseEntity.status(HttpStatus.OK)
                                      .body(ResponseUtil.notFound("No reservations found for this user."));
             }
         } catch (CarNotFoundException e) {

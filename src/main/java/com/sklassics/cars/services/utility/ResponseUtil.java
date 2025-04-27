@@ -15,6 +15,7 @@ public class ResponseUtil {
         public static final int CONFLICT = 1005;
         public static final int ALREADY_EXIST=1006;
         public static final int UNDER_VERIFICATION=1007;
+        public static final int REJECTED=1008;
         
     }
 
@@ -92,5 +93,9 @@ public class ResponseUtil {
     
     public static Map<String, Object> underVerification(String message) {
         return error(ResponseCodes.UNDER_VERIFICATION, message);
+    }
+    
+    public static Map<String, Object> rejected(String message) {
+        return error(ResponseCodes.REJECTED, message);
     }
 }
