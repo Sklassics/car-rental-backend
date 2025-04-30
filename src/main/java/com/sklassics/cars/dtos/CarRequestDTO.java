@@ -6,7 +6,8 @@ import java.util.List;
 public class CarRequestDTO {
     private String firstName;
     private String lastName;
-    private String contactInfo;
+    private String mobile;
+    private String email;
     private String carName;
     private String carModel;
     private int year;
@@ -26,14 +27,11 @@ public class CarRequestDTO {
 
     public CarRequestDTO() {};
     // Constructor matching the one you're trying to call
-    public CarRequestDTO(Long id, String firstName, String lastName, String contactInfo, String carName, String carModel,
+    public CarRequestDTO(Long id,String carName, String carModel,
                          int year, String vehicleType, String fuelType, String transmission,
                          double mileage, int seatingCapacity, String color,
-                         List<String> imageUrls, LocalDateTime createdAt,Double cost, String location, boolean available) {
+                         List<String> imageUrls,Double cost,boolean available) {
         this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.contactInfo = contactInfo;
         this.carName = carName;
         this.carModel = carModel;
         this.year = year;
@@ -44,9 +42,7 @@ public class CarRequestDTO {
         this.seatingCapacity = seatingCapacity;
         this.color = color;
         this.imageUrls = imageUrls;
-        this.createdAt = createdAt;
         this.cost=cost;
-        this.location=location;
         this.available=available;
     }
 
@@ -66,14 +62,20 @@ public class CarRequestDTO {
 		this.lastName = lastName;
 	}
 
-	public String getContactInfo() {
-		return contactInfo;
-	}
 
-	public void setContactInfo(String contactInfo) {
-		this.contactInfo = contactInfo;
-	}
 
+	public String getMobile() {
+		return mobile;
+	}
+	public void setMobile(String mobile) {
+		this.mobile = mobile;
+	}
+	public String getEmail() {
+		return email;
+	}
+	public void setEmail(String email) {
+		this.email = email;
+	}
 	public String getCarName() {
 		return carName;
 	}

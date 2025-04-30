@@ -1,5 +1,6 @@
 package com.sklassics.cars.services;
 
+import org.hibernate.query.sqm.sql.ConversionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,20 +28,21 @@ public class CarService {
     private OneDriveService oneDriveService;
 
     
-    public CarEntity saveCar(CarRequestDTO carRequest, List<MultipartFile> images) throws Exception {
+    public CarEntity saveCar(CarRequestDTO carRequest, List<MultipartFile> images, MultipartFile agreement) throws Exception {
         try {
-        	
-        	if (images != null && !images.isEmpty()) {
-        	    // Proceed
-        	} else {
-        	    System.out.println("No images received for upload.");
-        	}
+            // Log message for image upload
+            if (images != null && !images.isEmpty()) {
+                // Proceed to upload images
+            } else {
+                System.out.println("No images received for upload.");
+            }
 
             // Create CarEntity from request DTO
             CarEntity car = new CarEntity();
             car.setFirstName(carRequest.getFirstName());
             car.setLastName(carRequest.getLastName());
-            car.setContactInfo(carRequest.getContactInfo());
+            car.setMobile(carRequest.getMobile());
+            car.setEmail(carRequest.getEmail());
             car.setCarName(carRequest.getCarName());
             car.setCarModel(carRequest.getCarModel());
             car.setYear(carRequest.getYear());
@@ -53,67 +55,136 @@ public class CarService {
             car.setColor(carRequest.getColor());
             car.setLocation(carRequest.getLocation());
             car.setAvailable(true);
-            
+
+            // Save the car entity (before uploading images and agreement)
             car = carRepository.save(car);
 
+            // List to hold image URLs
             List<String> imageUrls = new ArrayList<>();
 
             // Upload images if provided
             if (images != null && !images.isEmpty()) {
-            	String folderName = car.getFirstName() + "_" + car.getLastName() + "_" + car.getId();
-            	imageUrls = oneDriveService.uploadCarImages(folderName, images);
-
+                String folderName = car.getFirstName() + "_" + car.getLastName() + "_" + car.getId();
+                imageUrls = oneDriveService.uploadCarImages(folderName, images);
             }
-            
-            System.out.println("Image urls buddy==========>"+imageUrls);
 
-            // Update car entity with image URLs
+            // Save the agreement if provided
+            String agreementUrl = null;
+            if (agreement != null) {
+                // Assuming you have a method in your oneDriveService to upload a file
+            	String folderName = car.getFirstName() + "_" + car.getLastName() + "_" + car.getId();
+                agreementUrl = oneDriveService.uploadAgreement(folderName, agreement);
+            }
+
+            // Log image URLs for debugging
+            System.out.println("Image URLs: " + imageUrls);
+            System.out.println("Agreement URL: " + agreementUrl);
+
+            // Update car entity with image URLs and agreement URL
             car.setImageUrls(imageUrls);
+            car.setAgreementPdfLink(agreementUrl); // Assuming 'setAgreementUrl' is a method in CarEntity
 
-            // Save again with images
+            // Save the updated car entity with images and agreement
             return carRepository.save(car);
 
         } catch (IllegalArgumentException e) {
             throw new Exception("Validation error: " + e.getMessage());
 
         } catch (IOException e) {
-            throw new Exception("Failed to upload images: " + e.getMessage());
+            throw new Exception("Failed to upload files: " + e.getMessage());
 
         } catch (Exception e) {
             throw new Exception("An unexpected error occurred: " + e.getMessage());
         }
     }
 
+
+//    public List<CarRequestDTO> getAllCars() {
+//        List<CarEntity> cars = carRepository.findAll();
+//        System.out.println("Total cars fetched from DB: " + cars.size());
+//
+//        return cars.stream().map(car -> {
+//            try {
+//                System.out.println("Processing car ID: " + car.getId());
+//                System.out.println("Image URLs (Graph API paths): " + car.getImageUrls());
+//
+//                List<String> secureLinks = car.getImageUrls().stream()
+//                    .map(url -> {
+//                        try {
+//                            // Extract path from Graph API URL
+//                            String path = url.substring(url.indexOf("/root:/") + 7);
+//                            return oneDriveService.generateDirectDownloadLink(path);
+//                        } catch (Exception e) {
+//                            System.err.println("Error generating view link for " + url + ": " + e.getMessage());
+//                            return null;
+//                        }
+//                    })
+//                    .filter(Objects::nonNull)
+//                    .collect(Collectors.toList());
+//
+//                System.out.println("Secure viewable image links count: " + secureLinks.size());
+//
+//                return new CarRequestDTO(
+//                    car.getId(),
+//
+//                    car.getCarName(),
+//                    car.getCarModel(),
+//                    car.getYear(),
+//                    car.getVehicleType(),
+//                    car.getFuelType(),
+//                    car.getTransmission(),
+//                    car.getMileage(),
+//                    car.getSeatingCapacity(),
+//                    car.getColor(),
+//                    secureLinks,
+//                    car.getCost(),
+//                    car.isAvailable()
+//                );
+//            } catch (Exception e) {
+//                System.err.println("Error handling car ID " + car.getId() + ": " + e.getMessage());
+//                return null;
+//            }
+//        }).filter(Objects::nonNull).collect(Collectors.toList());
+//    }
+
+    
     public List<CarRequestDTO> getAllCars() {
+        System.out.println("Fetching all cars from the database...");
         List<CarEntity> cars = carRepository.findAll();
         System.out.println("Total cars fetched from DB: " + cars.size());
 
         return cars.stream().map(car -> {
             try {
                 System.out.println("Processing car ID: " + car.getId());
-                System.out.println("Image URLs (Graph API paths): " + car.getImageUrls());
+
+                // Debugging image URLs
+                System.out.println("Original Image URLs (Graph API paths): " + car.getImageUrls());
 
                 List<String> secureLinks = car.getImageUrls().stream()
                     .map(url -> {
                         try {
                             // Extract path from Graph API URL
                             String path = url.substring(url.indexOf("/root:/") + 7);
-                            return oneDriveService.generateDirectDownloadLink(path);
+                            System.out.println("Extracted path for car ID " + car.getId() + ": " + path);
+
+                            // Generate direct download link
+                            String secureLink = oneDriveService.generateDirectDownloadLink(path);
+                            System.out.println("Generated secure link for car ID " + car.getId() + ": " + secureLink);
+
+                            return secureLink;
                         } catch (Exception e) {
-                            System.err.println("Error generating view link for " + url + ": " + e.getMessage());
+                            System.err.println("Error generating view link for URL: " + url + " (Car ID: " + car.getId() + ")");
+                            e.printStackTrace();
                             return null;
                         }
                     })
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
-                System.out.println("Secure viewable image links count: " + secureLinks.size());
+                System.out.println("Secure viewable image links count for car ID " + car.getId() + ": " + secureLinks.size());
 
                 return new CarRequestDTO(
                     car.getId(),
-                    car.getFirstName(),
-                    car.getLastName(),
-                    car.getContactInfo(),
                     car.getCarName(),
                     car.getCarModel(),
                     car.getYear(),
@@ -124,16 +195,21 @@ public class CarService {
                     car.getSeatingCapacity(),
                     car.getColor(),
                     secureLinks,
-                    car.getCreatedAt(),
                     car.getCost(),
-                    car.getLocation(),
                     car.isAvailable()
                 );
+            }
+            catch (ConversionException e) {
+                System.err.println("Conversion error for car ID " + car.getId() + ": " + e.getMessage());
+                e.printStackTrace();
+                return null;
             } catch (Exception e) {
                 System.err.println("Error handling car ID " + car.getId() + ": " + e.getMessage());
+                e.printStackTrace();
                 return null;
             }
-        }).filter(Objects::nonNull).collect(Collectors.toList());
+        }).filter(Objects::nonNull)
+          .collect(Collectors.toList());
     }
 
     public CarRequestDTO getCarById(Long id) {
@@ -161,25 +237,21 @@ public class CarService {
             System.out.println("Secure viewable image links count: " + secureLinks.size());
 
             return new CarRequestDTO(
-                    car.getId(),
-                    car.getFirstName(),
-                    car.getLastName(),
-                    car.getContactInfo(),
-                    car.getCarName(),
-                    car.getCarModel(),
-                    car.getYear(),
-                    car.getVehicleType(),
-                    car.getFuelType(),
-                    car.getTransmission(),
-                    car.getMileage(),
-                    car.getSeatingCapacity(),
-                    car.getColor(),
-                    secureLinks,
-                    car.getCreatedAt(),
-                    car.getCost(),
-                    car.getLocation(),
-                    car.isAvailable()
-            );
+            		  car.getId(),
+
+                      car.getCarName(),
+                      car.getCarModel(),
+                      car.getYear(),
+                      car.getVehicleType(),
+                      car.getFuelType(),
+                      car.getTransmission(),
+                      car.getMileage(),
+                      car.getSeatingCapacity(),
+                      car.getColor(),
+                      secureLinks,
+                      car.getCost(),
+                      car.isAvailable()
+                  );
 
         } catch (Exception e) {
             System.err.println("Error processing car ID " + car.getId() + ": " + e.getMessage());
@@ -211,7 +283,8 @@ public class CarService {
 
         existingCar.setFirstName(updatedCarData.getFirstName());
         existingCar.setLastName(updatedCarData.getLastName());
-        existingCar.setContactInfo(updatedCarData.getContactInfo());
+        existingCar.setMobile(updatedCarData.getMobile());
+        existingCar.setEmail(updatedCarData.getEmail());
         existingCar.setCarName(updatedCarData.getCarName());
         existingCar.setCarModel(updatedCarData.getCarModel());
         existingCar.setYear(updatedCarData.getYear());

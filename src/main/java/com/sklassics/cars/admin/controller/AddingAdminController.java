@@ -16,7 +16,7 @@ public class AddingAdminController {
     private AddingAdminService adminService;
 
     @PostMapping("/create")
-    public ResponseEntity<Map<String, Object>> createAdmin(@RequestParam String mobileNumber) {
+    public ResponseEntity<Map<String, Object>> createAdmin(@RequestHeader(value = "Authorization", required = false)@RequestParam String mobileNumber) {
         return ResponseEntity.ok(adminService.createAdmin(mobileNumber));
     }
 }

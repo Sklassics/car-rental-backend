@@ -5,9 +5,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sklassics.cars.dtos.CarRequestDTO;
 import com.sklassics.cars.entites.CarEntity;
 import com.sklassics.cars.services.CarService;
+import com.sklassics.cars.services.JwtService;
 import com.sklassics.cars.services.utility.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,13 +24,51 @@ public class VehicleManagement {
 
     @Autowired
     private CarService carService;
+    @Autowired
+    private JwtService jwtService;
 
     @PostMapping(value = "/vehicles", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, Object>> createCar(
+    		
             @RequestPart("car") String carJson,
-            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
-
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
+            @RequestPart(value ="agreement",required = false) MultipartFile agreement,
+            @RequestHeader(value = "Authorization",required = false) String authorizationHeader) {
+    	
+  
         try {
+        	 if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                 System.out.println("Authorization header missing or invalid format");
+                 return ResponseEntity
+                         .status(HttpStatus.UNAUTHORIZED)
+                         .body(ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format."));
+             }
+
+             // Extract token from Authorization header
+             String token = authorizationHeader.substring(7);
+             System.out.println("Extracted token: " + token);
+
+             // Validate token expiry
+             if (jwtService.isTokenExpired(token)) {
+                 System.out.println("Token expired: " + token);
+                 return ResponseEntity
+                         .status(HttpStatus.UNAUTHORIZED)
+                         .body(ResponseUtil.unauthorized("Token has expired. JWT token is not valid."));
+             }
+
+             // Extract and validate role
+             String role = jwtService.extractRole(token);
+             System.out.println("Extracted role from token: " + role);
+             if (role == null || !role.equalsIgnoreCase("admin")) {
+                 System.out.println("Role mismatch or role is null");
+                 return ResponseEntity
+                         .status(HttpStatus.UNAUTHORIZED)
+                         .body(ResponseUtil.unauthorized("Unauthorized access. Role mismatch."));
+             }
+
+             // Extract user ID (optional use)
+             Long userId = jwtService.extractUserId(token);
+             System.out.println("Extracted user ID from token: " + userId);
             if (carJson == null || carJson.trim().isEmpty()) {
                 return ResponseEntity.badRequest()
                         .body(ResponseUtil.validationError("Car JSON must not be empty"));
@@ -37,7 +77,7 @@ public class VehicleManagement {
             ObjectMapper objectMapper = new ObjectMapper();
             CarRequestDTO carRequest = objectMapper.readValue(carJson, CarRequestDTO.class);
 
-            CarEntity savedCar = carService.saveCar(carRequest, images);
+            CarEntity savedCar = carService.saveCar(carRequest, images,agreement);
             if (savedCar == null) {
                 return ResponseEntity.internalServerError()
                         .body(ResponseUtil.internalError("Car could not be saved"));

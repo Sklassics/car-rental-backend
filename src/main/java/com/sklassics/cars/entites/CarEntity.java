@@ -21,7 +21,8 @@ public class CarEntity {
     
     private String firstName;
     private String lastName;
-    private String contactInfo;
+    private String mobile;
+    private String email;
     private String carName;
     private String carModel;
     private int year;
@@ -31,6 +32,8 @@ public class CarEntity {
     private double mileage;
     private int seatingCapacity;
     private String color;
+    
+    private String agreementPdfLink;
     
     private String location;
     private Double cost;
@@ -74,11 +77,19 @@ public class CarEntity {
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
-	public String getContactInfo() {
-		return contactInfo;
+
+	
+	public String getMobile() {
+		return mobile;
 	}
-	public void setContactInfo(String contactInfo) {
-		this.contactInfo = contactInfo;
+	public void setMobile(String mobile) {
+		this.mobile = mobile;
+	}
+	public String getEmail() {
+		return email;
+	}
+	public void setEmail(String email) {
+		this.email = email;
 	}
 	public String getCarName() {
 		return carName;
@@ -158,6 +169,12 @@ public class CarEntity {
 	}
 	public void setAvailable(boolean available) {
 		this.available = available;
+	}
+	public String getAgreementPdfLink() {
+		return agreementPdfLink;
+	}
+	public void setAgreementPdfLink(String agreementPdfLink) {
+		this.agreementPdfLink = agreementPdfLink;
 	}
 
 	

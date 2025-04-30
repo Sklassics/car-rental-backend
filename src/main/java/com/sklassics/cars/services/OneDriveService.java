@@ -135,7 +135,7 @@
 	
 	    private final String userEmail = "revanthGundabattina@Sklassicstechnologiesprivat.onmicrosoft.com";
 	
-	    private final String[] allowedExtensions = {".jpg", ".jpeg", ".png"};
+	    private final String[] allowedExtensions = {".jpg", ".jpeg", ".png",".pdf"};
 	
 	    private GraphServiceClient<Request> getGraphClient() {
 	        ClientSecretCredential credential = new ClientSecretCredentialBuilder()
@@ -202,6 +202,53 @@
 	        System.out.println("All files uploaded. Total: " + uploadedUrls.size());
 	        return uploadedUrls;
 	    }
+	    
+	    public String uploadAgreement(String folderName, MultipartFile agreement) throws Exception {
+	        System.out.println("Starting agreement upload process...");
+	        
+	        GraphServiceClient<Request> graphClient = getGraphClient();
+	        System.out.println("Graph client initialized.");
+	        
+	        String agreementFolderPath = "Car/" + folderName; // Folder path for storing the agreement
+	        System.out.println("Target folder path: " + agreementFolderPath);
+	        
+	        // Ensure the folder exists in OneDrive
+	        System.out.println("Checking or creating folder: Car -> " + folderName);
+	        createFolderIfNotExists(graphClient, "Car", folderName);
+	        
+	        String originalFileName = agreement.getOriginalFilename();
+	        System.out.println("Processing file: " + originalFileName);
+	        
+	        String fileExtension = getFileExtension(originalFileName);
+	        System.out.println("File extension: " + fileExtension);
+	        
+	        if (!isValidExtension(fileExtension)) {
+	            System.out.println("Invalid file format: " + fileExtension);
+	            throw new Exception("Invalid file format. Allowed formats: .pdf, .doc, .docx, .txt");
+	        }
+	        
+	        byte[] fileBytes = agreement.getBytes();
+	        String fileName = System.currentTimeMillis() + fileExtension; // Unique filename
+	        String uploadPath = String.format("%s/%s", agreementFolderPath, fileName);
+	        
+	        System.out.println("Uploading file to path: " + uploadPath);
+	        
+	        // Upload the agreement file to OneDrive
+	        graphClient.users(userEmail)
+	                    .drive()
+	                    .root()
+	                    .itemWithPath(uploadPath)
+	                    .content()
+	                    .buildRequest()
+	                    .put(fileBytes);
+	        
+	        String uploadedUrl = String.format("https://graph.microsoft.com/v1.0/users/%s/drive/root:/%s", userEmail, uploadPath);
+	        
+	        System.out.println("Agreement uploaded successfully: " + uploadedUrl);
+	        
+	        return uploadedUrl;
+	    }
+
 	
 	
 	
