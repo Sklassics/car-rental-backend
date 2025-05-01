@@ -3,7 +3,7 @@ package com.sklassics.cars.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sklassics.cars.dtos.CarRequestDTO;
-import com.sklassics.cars.entites.CarEntity;
+import com.sklassics.cars.entities.CarEntity;
 import com.sklassics.cars.services.CarService;
 import com.sklassics.cars.services.JwtService;
 import com.sklassics.cars.services.utility.ResponseUtil;

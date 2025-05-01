@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.sklassics.cars.entites.User;
+import com.sklassics.cars.entities.User;
 import com.sklassics.cars.exceptions.CustomExceptions.UserNotFoundException;
 import com.sklassics.cars.repositories.UserRepository;
 import com.sklassics.cars.services.JwtService;

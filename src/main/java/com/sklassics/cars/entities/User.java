@@ -1,4 +1,4 @@
-package com.sklassics.cars.entites;
+package com.sklassics.cars.entities;
 
 import java.time.LocalDate;
 import java.util.List;

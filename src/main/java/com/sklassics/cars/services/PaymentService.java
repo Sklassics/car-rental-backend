@@ -6,8 +6,8 @@ import com.sklassics.cars.dtos.PaymentRequest;
 import com.sklassics.cars.dtos.PaymentResponse;
 import com.sklassics.cars.dtos.RefundResponse;
 import com.sklassics.cars.dtos.TransactionResponse;
-import com.sklassics.cars.entites.CarEntity;
-import com.sklassics.cars.entites.Transaction;
+import com.sklassics.cars.entities.CarEntity;
+import com.sklassics.cars.entities.Transaction;
 import com.sklassics.cars.repositories.CarRepository;
 import com.sklassics.cars.repositories.TransactionRepository;
 import com.sklassics.cars.exceptions.CustomExceptions.CarNotFoundException;
@@ -33,10 +33,10 @@ public class PaymentService {
 
     private RazorpayClient razorpayClient;
 
-    @Value("${razorpay.keyId}")
+    @Value("${razorpay.key-id}")
     private String razorpayKey;
 
-    @Value("${razorpay.keySecret}")
+    @Value("${razorpay.key-secret}")
     private String razorpaySecret;
 
     @PostConstruct

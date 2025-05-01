@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.sklassics.cars.dtos.UserDTO;
-import com.sklassics.cars.entites.User;
+import com.sklassics.cars.entities.User;
 import com.sklassics.cars.repositories.UserRepository;
 import com.sklassics.cars.services.JwtService;
 import com.sklassics.cars.services.OneDriveService;

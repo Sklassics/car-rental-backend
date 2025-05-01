@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.sklassics.cars.entites.Reservation;
+import com.sklassics.cars.entities.Reservation;
 import com.sklassics.cars.exceptions.CustomExceptions.CarNotFoundException;
 import com.sklassics.cars.services.JwtService;
 import com.sklassics.cars.services.ReservationService;

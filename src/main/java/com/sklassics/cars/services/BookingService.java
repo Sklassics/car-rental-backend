@@ -1,7 +1,7 @@
 package com.sklassics.cars.services;
 
-import com.sklassics.cars.entites.Booking;
-import com.sklassics.cars.entites.Transaction;
+import com.sklassics.cars.entities.Booking;
+import com.sklassics.cars.entities.Transaction;
 import com.sklassics.cars.repositories.BookingRepository;
 import com.sklassics.cars.repositories.CarRepository;
 import com.sklassics.cars.repositories.TransactionRepository;

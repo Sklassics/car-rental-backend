@@ -2,7 +2,7 @@ package com.sklassics.cars.dtos;
 
 
 
-import com.sklassics.cars.entites.Transaction;
+import com.sklassics.cars.entities.Transaction;
 
 public class TransactionResponse {
 

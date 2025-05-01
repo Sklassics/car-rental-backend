@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.sklassics.cars.dtos.CarRequestDTO;
-import com.sklassics.cars.entites.CarEntity;
+import com.sklassics.cars.entities.CarEntity;
 import com.sklassics.cars.exceptions.CustomExceptions.CarNotFoundException;
 import com.sklassics.cars.repositories.CarRepository;
 

@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.sklassics.cars.entites.Transaction;
+import com.sklassics.cars.entities.Transaction;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 	

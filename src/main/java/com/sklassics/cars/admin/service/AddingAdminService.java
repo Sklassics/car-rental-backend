@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.sklassics.cars.admin.entites.Admin;
+import com.sklassics.cars.admin.entities.Admin;
 import com.sklassics.cars.admin.repositories.AdminRepository;
 import com.sklassics.cars.services.utility.ResponseUtil;
 

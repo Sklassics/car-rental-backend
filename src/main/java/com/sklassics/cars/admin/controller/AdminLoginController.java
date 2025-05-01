@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.sklassics.cars.admin.entites.Admin;
+import com.sklassics.cars.admin.entities.Admin;
 import com.sklassics.cars.admin.repositories.AdminRepository;
 import com.sklassics.cars.dtos.MobileNoDTO;
 import com.sklassics.cars.services.JwtService;

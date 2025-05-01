@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sklassics.cars.entites.User;
+import com.sklassics.cars.entities.User;
 import com.sklassics.cars.repositories.UserRepository;
 import com.sklassics.cars.services.JwtService;
 import com.sklassics.cars.services.utility.ResponseUtil;

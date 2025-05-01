@@ -2,7 +2,7 @@ package com.sklassics.cars.controllers;
 
 import org.springframework.web.bind.annotation.*;
 
-import com.sklassics.cars.entites.Transaction;
+import com.sklassics.cars.entities.Transaction;
 import com.sklassics.cars.repositories.TransactionRepository;
 
 import org.apache.commons.codec.binary.Hex;
@@ -22,7 +22,7 @@ public class WebhookController {
 	@Autowired
 	private TransactionRepository transactionRepository;
 
-    @Value("${razorpay.webhookSecret}") 
+    @Value("${razorpay.webhook-secret}") 
     private String webhookSecret;
 
     @PostMapping("/razorpay")

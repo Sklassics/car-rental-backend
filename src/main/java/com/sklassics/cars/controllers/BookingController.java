@@ -1,6 +1,6 @@
 package com.sklassics.cars.controllers;
 
-import com.sklassics.cars.entites.Booking;
+import com.sklassics.cars.entities.Booking;
 import com.sklassics.cars.services.BookingService;
 import com.sklassics.cars.services.JwtService;
 import com.sklassics.cars.services.utility.ResponseUtil;

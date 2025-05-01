@@ -14,10 +14,10 @@ import java.util.UUID;
 @Service
 public class RazorpayService {
 
-    @Value("${razorpay.keyId}")
+    @Value("${razorpay.key-id}")
     private String keyId;
 
-    @Value("${razorpay.keySecret}")
+    @Value("${razorpay.key-secret}")
     private String keySecret;
 
     public Map<String, Object> createOrder(double amount) throws RazorpayException {

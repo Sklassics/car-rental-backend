@@ -11,9 +11,9 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.sklassics.cars.entites.CarEntity;
-import com.sklassics.cars.entites.Reservation;
-import com.sklassics.cars.entites.Transaction;
+import com.sklassics.cars.entities.CarEntity;
+import com.sklassics.cars.entities.Reservation;
+import com.sklassics.cars.entities.Transaction;
 import com.sklassics.cars.exceptions.CustomExceptions.CarNotFoundException;
 import com.sklassics.cars.repositories.CarRepository;
 import com.sklassics.cars.repositories.ReservationRepository;

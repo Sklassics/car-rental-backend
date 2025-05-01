@@ -1,8 +1,8 @@
 package com.sklassics.cars.services;
 
 import com.sklassics.cars.dtos.BookedRange;
-import com.sklassics.cars.entites.Booking;
-import com.sklassics.cars.entites.Reservation;
+import com.sklassics.cars.entities.Booking;
+import com.sklassics.cars.entities.Reservation;
 import com.sklassics.cars.repositories.BookingRepository;
 import com.sklassics.cars.repositories.ReservationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
