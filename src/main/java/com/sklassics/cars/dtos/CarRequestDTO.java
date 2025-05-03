@@ -4,47 +4,79 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class CarRequestDTO {
-    private String firstName;
-    private String lastName;
-    private String mobile;
-    private String email;
-    private String carName;
-    private String carModel;
-    private int year;
-    private String vehicleType;
-    private String fuelType;
-    private String transmission;
-    private double mileage;
-    private int seatingCapacity;
-    private String color;
-    private List<String> imageUrls; 
-    private LocalDateTime createdAt;
-    private Long id;
-    private String location;
-    private boolean available;
-    
-    private Double cost;
+	private String firstName;
+	private String lastName;
+	private String mobile;
+	private String email;
+	private String carName;
+	private String carModel;
+	private int year;
+	private String vehicleType;
+	private String fuelType;
+	private String transmission;
+	private double mileage;
+	private int seatingCapacity;
+	private String color;
+	private List<String> imageUrls;
+	private LocalDateTime createdAt;
+	private Long id;
+	private String location;
+	private boolean available;
 
-    public CarRequestDTO() {};
-    // Constructor matching the one you're trying to call
-    public CarRequestDTO(Long id,String carName, String carModel,
-                         int year, String vehicleType, String fuelType, String transmission,
-                         double mileage, int seatingCapacity, String color,
-                         List<String> imageUrls,Double cost,boolean available) {
-        this.id = id;
-        this.carName = carName;
-        this.carModel = carModel;
-        this.year = year;
-        this.vehicleType = vehicleType;
-        this.fuelType = fuelType;
-        this.transmission = transmission;
-        this.mileage = mileage;
-        this.seatingCapacity = seatingCapacity;
-        this.color = color;
-        this.imageUrls = imageUrls;
-        this.cost=cost;
-        this.available=available;
-    }
+	private String chassisNumber;
+
+	private String engineNumber;
+
+	private String vehicleRegistrationNumber;
+
+	private Double cost;
+
+	public CarRequestDTO() {
+	};
+
+	// Constructor matching the one you're trying to call
+	public CarRequestDTO(Long id, String carName, String carModel, int year, String vehicleType, String fuelType,
+			String transmission, double mileage, int seatingCapacity, String color, List<String> imageUrls, Double cost,
+			boolean available, String location,String chassisNumber,String engineNumber,String vehicleRegistrationNumber) {
+		this.id = id;
+		this.carName = carName;
+		this.carModel = carModel;
+		this.year = year;
+		this.vehicleType = vehicleType;
+		this.fuelType = fuelType;
+		this.transmission = transmission;
+		this.mileage = mileage;
+		this.seatingCapacity = seatingCapacity;
+		this.color = color;
+		this.imageUrls = imageUrls;
+		this.cost = cost;
+		this.available = available;
+		this.location = location;
+		this.chassisNumber=chassisNumber;
+		this.engineNumber=engineNumber;
+		this.vehicleRegistrationNumber=vehicleRegistrationNumber;
+		
+	}
+	
+	public CarRequestDTO(Long id, String carName, String carModel, int year, String vehicleType, String fuelType,
+			String transmission, double mileage, int seatingCapacity, String color, List<String> imageUrls, Double cost,
+			boolean available, String location) {
+		this.id = id;
+		this.carName = carName;
+		this.carModel = carModel;
+		this.year = year;
+		this.vehicleType = vehicleType;
+		this.fuelType = fuelType;
+		this.transmission = transmission;
+		this.mileage = mileage;
+		this.seatingCapacity = seatingCapacity;
+		this.color = color;
+		this.imageUrls = imageUrls;
+		this.cost = cost;
+		this.available = available;
+		this.location = location;
+		
+	}
 
 	public String getFirstName() {
 		return firstName;
@@ -62,20 +94,22 @@ public class CarRequestDTO {
 		this.lastName = lastName;
 	}
 
-
-
 	public String getMobile() {
 		return mobile;
 	}
+
 	public void setMobile(String mobile) {
 		this.mobile = mobile;
 	}
+
 	public String getEmail() {
 		return email;
 	}
+
 	public void setEmail(String email) {
 		this.email = email;
 	}
+
 	public String getCarName() {
 		return carName;
 	}
@@ -171,29 +205,54 @@ public class CarRequestDTO {
 	public void setId(Long id) {
 		this.id = id;
 	}
+
 	public Double getCost() {
 		return cost;
 	}
+
 	public void setCost(Double cost) {
 		this.cost = cost;
 	}
+
 	public String getLocation() {
 		return location;
 	}
+
 	public void setLocation(String location) {
 		this.location = location;
 	}
+
 	public boolean isAvailable() {
 		return available;
 	}
+
 	public void setAvailable(boolean available) {
 		this.available = available;
 	}
-	
-	
-	
 
+	public String getChassisNumber() {
+		return chassisNumber;
+	}
 
-    
-    
+	public void setChassisNumber(String chasisNumber) {
+		this.chassisNumber = chasisNumber;
+	}
+
+	public String getEngineNumber() {
+		return engineNumber;
+	}
+
+	public void setEngineNumber(String engineNumber) {
+		this.engineNumber = engineNumber;
+	}
+
+	public String getVehicleRegistrationNumber() {
+		return vehicleRegistrationNumber;
+	}
+
+	public void setVehicleRegistrationNumber(String vehicleRegistrationNumber) {
+		this.vehicleRegistrationNumber = vehicleRegistrationNumber;
+	}
+
+	
 }

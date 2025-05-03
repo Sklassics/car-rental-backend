@@ -61,146 +61,159 @@ public class UserManagement {
 
     @PostMapping("/login/send-otp")
     public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
-        String mobile = request.get("mobile");
+        String email = request.get("email");
         
-        Optional<User> user = userRepository.findByMobile(mobile);
+        Optional<User> user = userRepository.findByEmail(email);
 
         if (user.isEmpty()) {
-            return ResponseEntity.status(404).body(ResponseUtil.notFound("Mobile number not registered. Please register first."));
+            return ResponseEntity.status(404).body(ResponseUtil.notFound("Email not registered. Please register first."));
         }
 
-        return otpService.sendLoginOtp(mobile);
+        return otpService.sendLoginOtp(email);
     }
 
     @PostMapping("/login/verify-otp")
     public ResponseEntity<?> loginVerifyOtp(@RequestBody Map<String, String> request) {
-        String mobile = request.get("mobile");
+        String email = request.get("email");
         String otp = request.get("otp");
 
-        ResponseEntity<?> otpValidationResponse = otpService.validateLoginOtp(mobile, otp);
+        System.out.println("Received login OTP verification request for email: " + email + ", otp: " + otp);
+
+        ResponseEntity<?> otpValidationResponse = otpService.validateLoginOtp(email, otp);
 
         if (otpValidationResponse.getStatusCode().is2xxSuccessful()) {
-            
-            Long userId = otpService.getUserIdByMobile(mobile); 
+            System.out.println("OTP validated successfully for email: " + email);
+
+            Long userId = otpService.getUserIdByEmail(email); 
             String role = "customer";
-            String token = jwtService.generateToken(mobile, role, userId);
+            String token = jwtService.generateToken(email, role, userId);
+            System.out.println("Generated JWT token for userId: " + userId);
 
-            Optional<User> optionalUser = userRepository.findByMobile(mobile);
-            User user = optionalUser.get();
+            Optional<User> optionalUser = userRepository.findByEmail(email);
 
-            // Create a response map with token and pending status
-            Map<String, Object> data = new HashMap<>();
-            data.put("token", token);
-            data.put("isRegistered", user.getAadhaarNumber() != null && !user.getAadhaarNumber().isEmpty());
-            data.put("adminApproval", user.getIsAdminVerifiedDocuments());
-         
+            if (optionalUser.isPresent()) {
+                User user = optionalUser.get();
+                System.out.println("Fetched user details for email: " + email);
 
-            return ResponseEntity.ok(ResponseUtil.successWithData("Login successful.", data));
+                Map<String, Object> data = new HashMap<>();
+                data.put("token", token);
+                data.put("isRegistered", user.getAadhaarNumber() != null && !user.getAadhaarNumber().isEmpty());
+                data.put("adminApproval", user.getIsAdminVerifiedDocuments());
+
+                System.out.println("Login successful. Returning response with token and user info.");
+                return ResponseEntity.ok(ResponseUtil.successWithData("Login successful.", data));
+            } else {
+                System.out.println("User not found for email: " + email);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ResponseUtil.notFound("User not found."));
+            }
         } else {
+            System.out.println("OTP validation failed for email: " + email);
             return otpValidationResponse;
         }
     }
 
 
 
-    @PostMapping("/aadhaar/send-otp")
-    public ResponseEntity<?> sendAadhaarOtp(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-                                            @RequestBody Map<String, String> request) {
-        try {
-            // Check for missing or invalid token format
-            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-                System.out.println("Authorization header missing or invalid format");
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format."));
-            }
-
-            // Extract token from Authorization header
-            String token = authorizationHeader.substring(7);
-            System.out.println("Extracted token: " + token);
-
-            // Validate token expiry
-            if (jwtService.isTokenExpired(token)) {
-                System.out.println("Token expired: " + token);
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(ResponseUtil.unauthorized("Token has expired. JWT token is not valid."));
-            }
-
-            // Extract and validate role
-            String role = jwtService.extractRole(token);
-            System.out.println("Extracted role from token: " + role);
-            if (role == null || !role.equalsIgnoreCase("customer")) {
-                System.out.println("Role mismatch or role is null");
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(ResponseUtil.unauthorized("Unauthorized access. Role mismatch."));
-            }
-
-            // Extract user ID (optional use)
-            Long userId = jwtService.extractUserId(token);
-            System.out.println("Extracted user ID from token: " + userId);
-
-            // Validate aadhaar input
-            String aadhaar = request.get("aadhaar");
-            if (aadhaar == null || aadhaar.trim().isEmpty()) {
-                return ResponseEntity
-                        .badRequest()
-                        .body(ResponseUtil.validationError("Aadhaar number is required."));
-            }
-
-            // Proceed to send OTP
-            return otpService.sendAadhaarOtp(aadhaar);
-
-        } catch (Exception e) {
-            System.err.println("Error while sending Aadhaar OTP: " + e.getMessage());
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ResponseUtil.internalError("An error occurred while processing the request."));
-        }
-    }
-
-    @PostMapping("/aadhaar/verify-otp")
-    public ResponseEntity<?> validateAadhaarOtp(
-            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-            @RequestBody Map<String, String> request) {
-
-        try {
-            // Token validation
-            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format."));
-            }
-
-            String token = authorizationHeader.substring(7);
-            if (jwtService.isTokenExpired(token)) {
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(ResponseUtil.unauthorized("Token has expired. JWT token is not valid."));
-            }
-
-            String role = jwtService.extractRole(token);
-            if (role == null || !role.equalsIgnoreCase("customer")) {
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(ResponseUtil.unauthorized("Unauthorized access. Role mismatch."));
-            }
-
-            // Request body validation
-            String aadhaar = request.get("aadhaar");
-            String otp = request.get("otp");
-
-            if (aadhaar == null || otp == null) {
-                return ResponseEntity.badRequest().body(ResponseUtil.validationError("Aadhaar and OTP are required."));
-            }
-
-            return otpService.validateAadhaarOtp(aadhaar, otp);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ResponseUtil.internalError("Error during Aadhaar OTP verification: " + e.getMessage()));
-        }
-    }
+//
+//    @PostMapping("/aadhaar/send-otp")
+//    public ResponseEntity<?> sendAadhaarOtp(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+//                                            @RequestBody Map<String, String> request) {
+//        try {
+//            // Check for missing or invalid token format
+//            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+//                System.out.println("Authorization header missing or invalid format");
+//                return ResponseEntity
+//                        .status(HttpStatus.UNAUTHORIZED)
+//                        .body(ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format."));
+//            }
+//
+//            // Extract token from Authorization header
+//            String token = authorizationHeader.substring(7);
+//            System.out.println("Extracted token: " + token);
+//
+//            // Validate token expiry
+//            if (jwtService.isTokenExpired(token)) {
+//                System.out.println("Token expired: " + token);
+//                return ResponseEntity
+//                        .status(HttpStatus.UNAUTHORIZED)
+//                        .body(ResponseUtil.unauthorized("Token has expired. JWT token is not valid."));
+//            }
+//
+//            // Extract and validate role
+//            String role = jwtService.extractRole(token);
+//            System.out.println("Extracted role from token: " + role);
+//            if (role == null || !role.equalsIgnoreCase("customer")) {
+//                System.out.println("Role mismatch or role is null");
+//                return ResponseEntity
+//                        .status(HttpStatus.UNAUTHORIZED)
+//                        .body(ResponseUtil.unauthorized("Unauthorized access. Role mismatch."));
+//            }
+//
+//            // Extract user ID (optional use)
+//            Long userId = jwtService.extractUserId(token);
+//            System.out.println("Extracted user ID from token: " + userId);
+//
+//            // Validate aadhaar input
+//            String aadhaar = request.get("aadhaar");
+//            if (aadhaar == null || aadhaar.trim().isEmpty()) {
+//                return ResponseEntity
+//                        .badRequest()
+//                        .body(ResponseUtil.validationError("Aadhaar number is required."));
+//            }
+//
+//            // Proceed to send OTP
+//            return otpService.sendAadhaarOtp(aadhaar);
+//
+//        } catch (Exception e) {
+//            System.err.println("Error while sending Aadhaar OTP: " + e.getMessage());
+//            return ResponseEntity
+//                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(ResponseUtil.internalError("An error occurred while processing the request."));
+//        }
+//    }
+//
+//    @PostMapping("/aadhaar/verify-otp")
+//    public ResponseEntity<?> validateAadhaarOtp(
+//            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+//            @RequestBody Map<String, String> request) {
+//
+//        try {
+//            // Token validation
+//            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+//                return ResponseEntity
+//                        .status(HttpStatus.UNAUTHORIZED)
+//                        .body(ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format."));
+//            }
+//
+//            String token = authorizationHeader.substring(7);
+//            if (jwtService.isTokenExpired(token)) {
+//                return ResponseEntity
+//                        .status(HttpStatus.UNAUTHORIZED)
+//                        .body(ResponseUtil.unauthorized("Token has expired. JWT token is not valid."));
+//            }
+//
+//            String role = jwtService.extractRole(token);
+//            if (role == null || !role.equalsIgnoreCase("customer")) {
+//                return ResponseEntity
+//                        .status(HttpStatus.UNAUTHORIZED)
+//                        .body(ResponseUtil.unauthorized("Unauthorized access. Role mismatch."));
+//            }
+//
+//            // Request body validation
+//            String aadhaar = request.get("aadhaar");
+//            String otp = request.get("otp");
+//
+//            if (aadhaar == null || otp == null) {
+//                return ResponseEntity.badRequest().body(ResponseUtil.validationError("Aadhaar and OTP are required."));
+//            }
+//
+//            return otpService.validateAadhaarOtp(aadhaar, otp);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(ResponseUtil.internalError("Error during Aadhaar OTP verification: " + e.getMessage()));
+//        }
+//    }
 
 
     @PostMapping("/auth/register")

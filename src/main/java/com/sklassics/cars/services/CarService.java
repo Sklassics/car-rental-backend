@@ -54,6 +54,9 @@ public class CarService {
             car.setSeatingCapacity(carRequest.getSeatingCapacity());
             car.setColor(carRequest.getColor());
             car.setLocation(carRequest.getLocation());
+            car.setChassisNumber(carRequest.getChassisNumber());
+            car.setEngineNumber(carRequest.getEngineNumber());
+            car.setVehicleRegistrationNumber(carRequest.getVehicleRegistrationNumber());
             car.setAvailable(true);
 
             // Save the car entity (before uploading images and agreement)
@@ -196,7 +199,8 @@ public class CarService {
                     car.getColor(),
                     secureLinks,
                     car.getCost(),
-                    car.isAvailable()
+                    car.isAvailable(),
+                    car.getLocation()
                 );
             }
             catch (ConversionException e) {
@@ -250,7 +254,8 @@ public class CarService {
                       car.getColor(),
                       secureLinks,
                       car.getCost(),
-                      car.isAvailable()
+                      car.isAvailable(),
+                      car.getLocation()
                   );
 
         } catch (Exception e) {

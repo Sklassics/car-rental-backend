@@ -16,6 +16,7 @@ public class ResponseUtil {
         public static final int ALREADY_EXIST=1006;
         public static final int UNDER_VERIFICATION=1007;
         public static final int REJECTED=1008;
+        public static final int ALREADY_EXIST_WITH_EMAIL=1009;
         
     }
 
@@ -88,6 +89,10 @@ public class ResponseUtil {
     }
     
     public static Map<String, Object> alreadyExist(String message) {
+        return error(ResponseCodes.ALREADY_EXIST, message);
+    }
+    
+    public static Map<String, Object> alreadyExistWithEmail(String message) {
         return error(ResponseCodes.ALREADY_EXIST, message);
     }
     

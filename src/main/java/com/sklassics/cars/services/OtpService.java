@@ -6,11 +6,14 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -38,99 +41,212 @@ public class OtpService {
 	@Autowired
 	private JwtService jwtService;
 
+	@Autowired
+	private JavaMailSender javaMailSender;
+
+	@Autowired
+	private EmailService emailService;
+
 	private static final String DUMMY_OTP = "123456";
 	private final Map<String, OtpCache> otpCacheMap = new ConcurrentHashMap<>();
 	private final Map<String, String> otpCache = new ConcurrentHashMap<>();
 	private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-
+	
+	
+	
 	public ResponseEntity<?> sendMobileEmailOtp(String mobile, String email) {
 		// Check if the mobile number already exists in the database
-		boolean isMobileExists = userRepository.existsByMobile(mobile); // Assuming userRepository exists and has this
-																		// method
-
-		if (isMobileExists) {
+		if (userRepository.existsByMobile(mobile)) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body(ResponseUtil.alreadyExist("Mobile number already exist. Please Login !!: " + mobile));
+					.body(ResponseUtil.alreadyExist("Mobile number " + mobile + " already exists. Please Login !!"));
 		}
-
-		// If the mobile number doesn't exist in the database, proceed with OTP sending
-		otpCacheMap.put(mobile, new OtpCache(email, DUMMY_OTP));
-		System.out.println("Storing OTP " + DUMMY_OTP + " for mobile: " + mobile + ", email: " + email);
-
-		return ResponseEntity.ok(ResponseUtil.successMessage("OTP has been sent to mobile number: " + mobile));
+	
+		if (userRepository.existsByEmail(email)) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+					.body(ResponseUtil.alreadyExistWithEmail("Email: " + email + " already exists !!"));
+		}
+	
+		// Generate 6-digit OTP
+		String otp = String.format("%06d", new Random().nextInt(999999));
+	
+		// Save OTP in cache
+		otpCacheMap.put(mobile, new OtpCache(email, otp));
+		System.out.println("Generated OTP " + otp + " for mobile: " + mobile + ", email: " + email);
+	
+		// Send OTP via Email using EmailService
+		try {
+			emailService.sendOtpEmail(email, otp);
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(ResponseUtil.internalError("Failed to send OTP email. Please try again."));
+		}
+	
+		return ResponseEntity.ok(ResponseUtil.successMessage("OTP has been sent to email: " + email));
 	}
+	
 
 	public ResponseEntity<?> validateMobileEmailOtp(String mobile, String otp) {
 		OtpCache cached = otpCacheMap.get(mobile);
+	
 		if (cached == null) {
-			return ResponseEntity.badRequest().body(ResponseUtil.notFound("No OTP generated for this mobile number."));
+			return ResponseEntity.badRequest()
+					.body(ResponseUtil.notFound("No OTP generated for this mobile number."));
 		}
-
-		if (cached.getOtp().equals(otp)) {
-			User user = new User();
-			user.setMobile(mobile);
-			user.setEmail(cached.getEmail());
-
-			userRepository.save(user);
-			otpCacheMap.remove(mobile);
-
-			// Use saved user ID in the token
-			Long userId = user.getId(); // Assuming ID is generated and set after save
-			String token = jwtService.generateToken(mobile, "customer", userId);
-
-			Map<String, Object> data = new HashMap<>();
-			data.put("token", token);
-			return ResponseEntity.ok(ResponseUtil.successWithData("OTP Verified Successfully !", data));
-		} else {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseUtil.unauthorized("Invalid OTP."));
+	
+		if (!cached.getOtp().equals(otp)) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body(ResponseUtil.unauthorized("Invalid OTP."));
 		}
+	
+		// Create and save user
+		User user = new User();
+		user.setMobile(mobile);
+		user.setEmail(cached.getEmail());
+		userRepository.save(user);
+	
+		// Clean up cache
+		otpCacheMap.remove(mobile);
+	
+		// Generate token
+		String token = jwtService.generateToken(mobile, "customer", user.getId());
+	
+		Map<String, Object> data = new HashMap<>();
+		data.put("token", token);
+		return ResponseEntity.ok(ResponseUtil.successWithData("OTP Verified Successfully!", data));
+	}
+	
+
+
+
+
+	public ResponseEntity<?> sendLoginOtp(String email) {
+		// Generate 6-digit OTP
+				String otp = String.format("%06d", new Random().nextInt(999999));
+			
+				// Save OTP in cache
+				otpCache.put(email,otp);				
+				try {
+					emailService.sendOtpEmail(email, otp);
+				} catch (Exception e) {
+					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+							.body(ResponseUtil.internalError("Failed to send OTP email. Please try again."));
+				}
+		return ResponseEntity.ok(ResponseUtil.successMessage("OTP has been sent to mobile number: " + email));
 	}
 
-	public ResponseEntity<?> sendLoginOtp(String mobile) {
-		otpCache.put(mobile, DUMMY_OTP);
-		scheduleOtpExpiration(mobile, 5);
-		System.out.println("OTP sent to mobile: " + mobile);
-		return ResponseEntity.ok(ResponseUtil.successMessage("OTP has been sent to mobile number: " + mobile));
+	public ResponseEntity<?> validateLoginOtp(String email, String otp) {
+	    // Basic null or empty check
+	    if (email == null || email.trim().isEmpty()) {
+	        return ResponseEntity.badRequest()
+	                .body(ResponseUtil.conflict("Email must not be empty."));
+	    }
+
+	    if (otp == null || otp.trim().isEmpty()) {
+	        return ResponseEntity.badRequest()
+	                .body(ResponseUtil.conflict("OTP must not be empty."));
+	    }
+
+
+	    // OTP format validation (assuming 6-digit numeric)
+	    if (!otp.matches("^\\d{6}$")) {
+	        return ResponseEntity.badRequest()
+	                .body(ResponseUtil.conflict("Invalid OTP format. OTP must be 6 digits."));
+	    }
+
+	    String cachedOtp = otpCache.get(email);
+	    if (cachedOtp == null) {
+	        return ResponseEntity.badRequest()
+	                .body(ResponseUtil.notFound("No OTP generated for this email."));
+	    }
+
+	    if (!cachedOtp.equals(otp)) {
+	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+	                .body(ResponseUtil.unauthorized("Invalid OTP."));
+	    }
+
+	    otpCache.remove(email);
+	    return ResponseEntity.ok(ResponseUtil.successMessage("OTP verified successfully."));
 	}
 
-	public ResponseEntity<?> validateLoginOtp(String mobile, String otp) {
-		String cachedOtp = otpCache.get(mobile);
-		if (cachedOtp == null) {
-			return ResponseEntity.badRequest().body(ResponseUtil.notFound("No OTP generated for this mobile number."));
-		}
-		if (cachedOtp.equals(otp)) {
-			otpCache.remove(mobile);
-			return ResponseEntity.ok(ResponseUtil.successMessage("OTP verified successfully."));
-		} else {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseUtil.unauthorized("Invalid OTP."));
-		}
-	}
+
 
 	public Long getAdminByMobile(String mobile) {
 		return adminRepository.findByMobileNumber(mobile).map(Admin::getId)
 				.orElseThrow(() -> new UserNotFoundException("User not found with mobile: " + mobile));
 	}
 	
-	
+//	public ResponseEntity<?> sendMobileEmailOtp(String mobile, String email) {
+//	// Check if the mobile number already exists in the database
+//	boolean isMobileExists = userRepository.existsByMobile(mobile); 
+//
+//	if (isMobileExists) {
+//		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//				.body(ResponseUtil.alreadyExist("Mobile number " + mobile +"already exist. Please Login !! "));
+//	}
+//	
+//	boolean isEmailExists =userRepository.existsByEmail(email);
+//	
+//	if (isEmailExists)
+//	{
+//		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//				.body(ResponseUtil.alreadyExistWithEmail("Email :" + email + " already exist !!"));
+//		
+//	}
+//
+//	// If the mobile number doesn't exist in the database, proceed with OTP sending
+//	otpCacheMap.put(mobile, new OtpCache(email, DUMMY_OTP));
+//	System.out.println("Storing OTP " + DUMMY_OTP + " for mobile: " + mobile + ", email: " + email);
+//
+//	return ResponseEntity.ok(ResponseUtil.successMessage("OTP has been sent to mobile number: " + mobile));
+//}
+//
+//
+//public ResponseEntity<?> validateMobileEmailOtp(String mobile, String otp) {
+//	OtpCache cached = otpCacheMap.get(mobile);
+//	if (cached == null) {
+//		return ResponseEntity.badRequest().body(ResponseUtil.notFound("No OTP generated for this mobile number."));
+//	}
+//
+//	if (cached.getOtp().equals(otp)) {
+//		User user = new User();
+//		user.setMobile(mobile);
+//		user.setEmail(cached.getEmail());
+//
+//		userRepository.save(user);
+//		otpCacheMap.remove(mobile);
+//
+//		// Use saved user ID in the token
+//		Long userId = user.getId();
+//		String token = jwtService.generateToken(mobile, "customer", userId);
+//		
+//		
+//
+//		Map<String, Object> data = new HashMap<>();
+//		data.put("token", token);
+//		return ResponseEntity.ok(ResponseUtil.successWithData("OTP Verified Successfully !", data));
+//	} else {
+//		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseUtil.unauthorized("Invalid OTP."));
+//	}
+//}
 
-	public ResponseEntity<?> sendAadhaarOtp(String aadhaar) {
-		otpCache.put(aadhaar, DUMMY_OTP);
-		scheduleOtpExpiration(aadhaar, 5);
-		return ResponseEntity.ok(ResponseUtil.successMessage("OTP sent successfully to Aadhaar number: " + aadhaar));
-	}
-
-	public ResponseEntity<?> validateAadhaarOtp(String aadhaar, String otp) {
-		if (!otpCache.containsKey(aadhaar)) {
-			return ResponseEntity.badRequest().body(ResponseUtil.notFound("No OTP generated for this Aadhaar number."));
-		}
-		if (!otpCache.get(aadhaar).equals(otp)) {
-			return ResponseEntity.status(401).body(ResponseUtil.unauthorized("Invalid OTP."));
-		}
-		otpCache.remove(aadhaar);
-		
-		
-		return ResponseEntity.ok(ResponseUtil.successMessage("OTP validated successfully for Aadhaar."));
-	}
+//	public ResponseEntity<?> sendAadhaarOtp(String aadhaar) {
+//		otpCache.put(aadhaar, DUMMY_OTP);
+//		scheduleOtpExpiration(aadhaar, 5);
+//		return ResponseEntity.ok(ResponseUtil.successMessage("OTP sent successfully to Aadhaar number: " + aadhaar));
+//	}
+//
+//	public ResponseEntity<?> validateAadhaarOtp(String aadhaar, String otp) {
+//		if (!otpCache.containsKey(aadhaar)) {
+//			return ResponseEntity.badRequest().body(ResponseUtil.notFound("No OTP generated for this Aadhaar number."));
+//		}
+//		if (!otpCache.get(aadhaar).equals(otp)) {
+//			return ResponseEntity.status(401).body(ResponseUtil.unauthorized("Invalid OTP."));
+//		}
+//		otpCache.remove(aadhaar);
+//		
+//		
+//		return ResponseEntity.ok(ResponseUtil.successMessage("OTP validated successfully for Aadhaar."));
+//	}
 
 	private String saveFileToOneDrive(MultipartFile file, String folder) {
 		try {
@@ -232,6 +348,11 @@ public class OtpService {
 	public Long getUserIdByMobile(String mobile) {
 		return userRepository.findByMobile(mobile).map(User::getId)
 				.orElseThrow(() -> new UserNotFoundException("User not found with mobile: " + mobile));
+	}
+	
+	public Long getUserIdByEmail(String email) {
+		return userRepository.findByEmail(email).map(User::getId)
+				.orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 	}
 
 	private void scheduleOtpExpiration(String key, int minutes) {

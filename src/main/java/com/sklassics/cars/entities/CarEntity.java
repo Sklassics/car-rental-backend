@@ -33,6 +33,14 @@ public class CarEntity {
     private int seatingCapacity;
     private String color;
     
+    private String chassisNumber;
+    
+    private String engineNumber;
+    
+    private String vehicleRegistrationNumber;
+    
+    
+    
     private String agreementPdfLink;
     
     private String location;
@@ -175,6 +183,24 @@ public class CarEntity {
 	}
 	public void setAgreementPdfLink(String agreementPdfLink) {
 		this.agreementPdfLink = agreementPdfLink;
+	}
+	public String getChassisNumber() {
+		return chassisNumber;
+	}
+	public void setChassisNumber(String chasisNumber) {
+		this.chassisNumber = chasisNumber;
+	}
+	public String getEngineNumber() {
+		return engineNumber;
+	}
+	public void setEngineNumber(String engineNumber) {
+		this.engineNumber = engineNumber;
+	}
+	public String getVehicleRegistrationNumber() {
+		return vehicleRegistrationNumber;
+	}
+	public void setVehicleRegistrationNumber(String vehicleRegistrationNumber) {
+		this.vehicleRegistrationNumber = vehicleRegistrationNumber;
 	}
 
 	

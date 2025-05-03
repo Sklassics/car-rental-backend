@@ -28,9 +28,9 @@ public class CarsApplication {
 	private static final Logger logger = LoggerFactory.getLogger(CarsApplication.class);
 
 	public static void main(String[] args) {
-		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-
-		dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+//		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+//
+//		dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
 
 		// Optionally print the default timezone
 		System.out.println("Default Timezone: " + TimeZone.getDefault().getID());
