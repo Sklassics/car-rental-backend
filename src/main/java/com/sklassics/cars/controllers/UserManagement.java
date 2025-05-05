@@ -1,5 +1,6 @@
 package com.sklassics.cars.controllers;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -49,14 +50,14 @@ public class UserManagement {
 
     @PostMapping("/auth/verify-otp")
     public ResponseEntity<?> validateOtp(@RequestBody Map<String, String> request) {
-        String mobile = request.get("mobile");
+        String email = request.get("email");
         String otp = request.get("otp");
 
-        if (mobile == null || otp == null) {
-            return ResponseEntity.badRequest().body(ResponseUtil.validationError("Mobile and OTP are required."));
+        if (email == null || otp == null) {
+            return ResponseEntity.badRequest().body(ResponseUtil.validationError("Email and OTP are required."));
         }
 
-        return otpService.validateMobileEmailOtp(mobile, otp);
+        return otpService.validateMobileEmailOtp(email, otp);
     }
 
     @PostMapping("/login/send-otp")
@@ -115,107 +116,6 @@ public class UserManagement {
 
 
 
-//
-//    @PostMapping("/aadhaar/send-otp")
-//    public ResponseEntity<?> sendAadhaarOtp(@RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-//                                            @RequestBody Map<String, String> request) {
-//        try {
-//            // Check for missing or invalid token format
-//            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-//                System.out.println("Authorization header missing or invalid format");
-//                return ResponseEntity
-//                        .status(HttpStatus.UNAUTHORIZED)
-//                        .body(ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format."));
-//            }
-//
-//            // Extract token from Authorization header
-//            String token = authorizationHeader.substring(7);
-//            System.out.println("Extracted token: " + token);
-//
-//            // Validate token expiry
-//            if (jwtService.isTokenExpired(token)) {
-//                System.out.println("Token expired: " + token);
-//                return ResponseEntity
-//                        .status(HttpStatus.UNAUTHORIZED)
-//                        .body(ResponseUtil.unauthorized("Token has expired. JWT token is not valid."));
-//            }
-//
-//            // Extract and validate role
-//            String role = jwtService.extractRole(token);
-//            System.out.println("Extracted role from token: " + role);
-//            if (role == null || !role.equalsIgnoreCase("customer")) {
-//                System.out.println("Role mismatch or role is null");
-//                return ResponseEntity
-//                        .status(HttpStatus.UNAUTHORIZED)
-//                        .body(ResponseUtil.unauthorized("Unauthorized access. Role mismatch."));
-//            }
-//
-//            // Extract user ID (optional use)
-//            Long userId = jwtService.extractUserId(token);
-//            System.out.println("Extracted user ID from token: " + userId);
-//
-//            // Validate aadhaar input
-//            String aadhaar = request.get("aadhaar");
-//            if (aadhaar == null || aadhaar.trim().isEmpty()) {
-//                return ResponseEntity
-//                        .badRequest()
-//                        .body(ResponseUtil.validationError("Aadhaar number is required."));
-//            }
-//
-//            // Proceed to send OTP
-//            return otpService.sendAadhaarOtp(aadhaar);
-//
-//        } catch (Exception e) {
-//            System.err.println("Error while sending Aadhaar OTP: " + e.getMessage());
-//            return ResponseEntity
-//                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(ResponseUtil.internalError("An error occurred while processing the request."));
-//        }
-//    }
-//
-//    @PostMapping("/aadhaar/verify-otp")
-//    public ResponseEntity<?> validateAadhaarOtp(
-//            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-//            @RequestBody Map<String, String> request) {
-//
-//        try {
-//            // Token validation
-//            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-//                return ResponseEntity
-//                        .status(HttpStatus.UNAUTHORIZED)
-//                        .body(ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format."));
-//            }
-//
-//            String token = authorizationHeader.substring(7);
-//            if (jwtService.isTokenExpired(token)) {
-//                return ResponseEntity
-//                        .status(HttpStatus.UNAUTHORIZED)
-//                        .body(ResponseUtil.unauthorized("Token has expired. JWT token is not valid."));
-//            }
-//
-//            String role = jwtService.extractRole(token);
-//            if (role == null || !role.equalsIgnoreCase("customer")) {
-//                return ResponseEntity
-//                        .status(HttpStatus.UNAUTHORIZED)
-//                        .body(ResponseUtil.unauthorized("Unauthorized access. Role mismatch."));
-//            }
-//
-//            // Request body validation
-//            String aadhaar = request.get("aadhaar");
-//            String otp = request.get("otp");
-//
-//            if (aadhaar == null || otp == null) {
-//                return ResponseEntity.badRequest().body(ResponseUtil.validationError("Aadhaar and OTP are required."));
-//            }
-//
-//            return otpService.validateAadhaarOtp(aadhaar, otp);
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(ResponseUtil.internalError("Error during Aadhaar OTP verification: " + e.getMessage()));
-//        }
-//    }
-
-
     @PostMapping("/auth/register")
     public ResponseEntity<?> register(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
@@ -267,23 +167,54 @@ public class UserManagement {
     }
     
     @GetMapping("/user/profile")
-    public ResponseEntity<?> getUserProfile(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getUserProfile(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
         try {
-            String token = authHeader.replace("Bearer ", "");
-            String mobileNumber = jwtService.extractMobileNumber(token);
-            Optional<User> optionalUser = userRepository.findByMobile(mobileNumber);
-            if (optionalUser.get().getAddress() == null) {
-                return ResponseEntity.ok(ResponseUtil.notFound(
-                    ResponseUtil.ErrorMessages.notFoundWithId("User", mobileNumber)
-                ));
+            // Token validation
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body(ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format."));
+            }
+
+            String token = authorizationHeader.substring(7);  // Extract token from Bearer
+            if (jwtService.isTokenExpired(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body(ResponseUtil.unauthorized("Token has expired. JWT token is not valid."));
+            }
+
+            String role = jwtService.extractRole(token);
+            if (role == null || !role.equalsIgnoreCase("customer")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body(ResponseUtil.unauthorized("Unauthorized access. Role mismatch."));
+            }
+
+            Long userId = jwtService.extractUserId(token);
+            System.out.println("Extracted user ID from token: " + userId);  // Debugging statement (can be removed later)
+
+            // Extract the user's email from the token
+            String email = jwtService.extractEmailFromToken(token);
+
+            // Fetch user data from repository based on email
+            Optional<User> optionalUser = userRepository.findByEmail(email);
+            if (optionalUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                     .body(ResponseUtil.notFound(ResponseUtil.ErrorMessages.notFoundWithId("User", email)));
             }
 
             User user = optionalUser.get();
 
+            // If the user's address is null, return a not found response
+            if (user.getAddress() == null) {
+                return ResponseEntity.ok(ResponseUtil.notFound(
+                    ResponseUtil.ErrorMessages.notFoundWithId("User Address", email)
+                ));
+            }
+
+            // Check if documents are pending verification
             if ("PENDING".equalsIgnoreCase(user.getIsAdminVerifiedDocuments())) {
                 return ResponseEntity.ok(ResponseUtil.underVerification("Documents are under verification"));
             }
 
+            // Prepare the user data map
             Map<String, Object> userData = Map.of(
                 "fullName", user.getFullName(),
                 "address", user.getAddress(),
@@ -292,8 +223,6 @@ public class UserManagement {
                 "licenseFilePath", oneDriveService.convertFileToBase64(user.getLicenseFilePath()),
                 "submittedAt", user.getSubmittedAt(),
                 "status", user.getIsAdminVerifiedDocuments()
-                
-
             );
 
             return ResponseEntity.ok(ResponseUtil.successWithData("User profile fetched successfully", userData));
@@ -306,43 +235,62 @@ public class UserManagement {
     }
 
 
+ // PUT update user profile by ID
+    @PutMapping("/update-profile")
+    public ResponseEntity<?> updateUserProfile(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> updates,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        try {
+            // Token validation
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body(ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format."));
+            }
 
-//    // PUT update user profile by ID
-//    @PutMapping("/users/{id}")
-//    public ResponseEntity<?> updateUserProfile(
-//            @PathVariable Long id,
-//            @RequestBody Map<String, String> updates) {
-//
-//        Optional<User> userOptional = userRepository.findById(id);
-//
-//        if (userOptional.isEmpty()) {
-//            return ResponseEntity.status(404).body(ResponseUtil.notFound("User not found with ID: " + id));
-//        }
-//
-//        User user = userOptional.get();
-//
-//        if (updates.containsKey("email")) {
-//            user.setEmail(updates.get("email"));
-//        }
-//        if (updates.containsKey("mobile")) {
-//            user.setMobile(updates.get("mobile"));
-//        }
-//        if (updates.containsKey("fullName")) {
-//            user.setFullName(updates.get("fullName"));
-//        }
-//        if (updates.containsKey("location")) {
-//            user.setLocation(updates.get("location"));
-//        }
-//
-//        if (updates.containsKey("submittedAt")) {
-//            try {
-//                user.setSubmittedAt(LocalDate.parse(updates.get("submittedAt")));
-//            } catch (Exception e) {
-//                return ResponseEntity.badRequest().body(ResponseUtil.validationError("Invalid date format for submittedAt. Expected format: yyyy-MM-dd"));
-//            }
-//        }
-//
-//        userRepository.save(user);
-//        return ResponseEntity.ok(ResponseUtil.successMessage("User profile updated successfully."));
-//    }
+            String token = authorizationHeader.substring(7);  // Extract token from Bearer
+            if (jwtService.isTokenExpired(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body(ResponseUtil.unauthorized("Token has expired. JWT token is not valid."));
+            }
+
+            String role = jwtService.extractRole(token);
+            if (role == null || !role.equalsIgnoreCase("customer")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body(ResponseUtil.unauthorized("Unauthorized access. Role mismatch."));
+            }
+
+            Long userId = jwtService.extractUserId(token);
+            System.out.println("Extracted user ID from token: " + userId);  // Debugging
+
+            Optional<User> userOptional = userRepository.findById(userId);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(404).body(ResponseUtil.notFound("User not found with ID: " + id));
+            }
+
+            User user = userOptional.get();
+
+            if (updates.containsKey("email")) {
+                user.setEmail(updates.get("email"));
+            }
+            if (updates.containsKey("mobile")) {
+                user.setMobile(updates.get("mobile"));
+            }
+            if (updates.containsKey("fullName")) {
+            	try {
+                user.setFullName(updates.get("fullName"));
+            
+                } catch (Exception e) {
+                    return ResponseEntity.badRequest().body(ResponseUtil.validationError("something went wrong !"));
+                }
+            }
+
+            userRepository.save(user);
+            return ResponseEntity.ok(ResponseUtil.successMessage("User profile updated successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body(ResponseUtil.internalError("An unexpected error occurred."));
+        }
+    }
+
 }

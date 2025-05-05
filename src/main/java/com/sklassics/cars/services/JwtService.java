@@ -19,16 +19,16 @@ public class JwtService {
     private static final long EXPIRATION_TIME = 1000 * 60 * 60; // 1 hour
 
     
-    public String generateToken(String mobileNumber, String role, Long userId) {
+    public String generateToken(String email, String role, Long userId) {
         Map<String, Object> claims = new HashMap<>();
         
-        claims.put("mobileNumber", mobileNumber);
+        claims.put("email", email);
         claims.put("role", role);
         claims.put("userId", userId);
 
         String token = Jwts.builder()
                 .setClaims(claims)
-                .setSubject(mobileNumber)
+                .setSubject(email)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(SECRET_KEY)
@@ -90,11 +90,11 @@ public class JwtService {
     }
 
     // ✅ Extract mobileNumber
-    public String extractMobileNumber(String token) {
+    public String extractEmailFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        String mobileNumber = (claims != null) ? claims.get("mobileNumber", String.class) : null;
-        System.out.println("Extracted mobile number from token: " + mobileNumber);
-        return mobileNumber;
+        String email = (claims != null) ? claims.get("email", String.class) : null;
+        System.out.println("Extracted email from token: " + email);
+        return email;
     }
     
     public long extractUserId(String token) {

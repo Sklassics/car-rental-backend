@@ -17,6 +17,15 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -31,8 +40,8 @@ public class VehicleManagement {
     public ResponseEntity<Map<String, Object>> createCar(
     		
             @RequestPart("car") String carJson,
-            @RequestPart(value = "images", required = false) List<MultipartFile> images,
-            @RequestPart(value ="agreement",required = false) MultipartFile agreement,
+            @RequestPart(value = "images") List<MultipartFile> images,
+            @RequestPart(value ="agreement") MultipartFile agreement,
             @RequestHeader(value = "Authorization",required = false) String authorizationHeader) {
     	
   
@@ -100,7 +109,7 @@ public class VehicleManagement {
     @GetMapping("/vehicles")
     public ResponseEntity<Map<String, Object>> getAllCars() {
         try {
-            List<CarRequestDTO> cars = carService.getAllCars();
+            List<Map<String, Object>> cars = carService.getAllCars();
             if (cars == null || cars.isEmpty()) {
                 return ResponseEntity.status(404)
                         .body(ResponseUtil.notFound("No vehicles found"));
@@ -112,6 +121,27 @@ public class VehicleManagement {
         }
     }
 
+//    @GetMapping("/vehicles/{id}")
+//    public ResponseEntity<Map<String, Object>> getCarById(@PathVariable Long id) {
+//        try {
+//            if (id == null || id <= 0) {
+//                return ResponseEntity.badRequest()
+//                        .body(ResponseUtil.validationError("Invalid vehicle ID"));
+//            }
+//
+//            CarRequestDTO car = carService.getCarById(id);
+//            if (car == null) {
+//                return ResponseEntity.status(404)
+//                        .body(ResponseUtil.notFound(ResponseUtil.ErrorMessages.notFoundWithId("Vehicle", id)));
+//            }
+//
+//            return ResponseEntity.ok(ResponseUtil.successWithData("Vehicle retrieved successfully", car));
+//        } catch (Exception e) {
+//            return ResponseEntity.internalServerError()
+//                    .body(ResponseUtil.internalError("Error fetching vehicle: " + e.getMessage()));
+//        }
+//    }
+//    
     @GetMapping("/vehicles/{id}")
     public ResponseEntity<Map<String, Object>> getCarById(@PathVariable Long id) {
         try {
@@ -126,12 +156,20 @@ public class VehicleManagement {
                         .body(ResponseUtil.notFound(ResponseUtil.ErrorMessages.notFoundWithId("Vehicle", id)));
             }
 
-            return ResponseEntity.ok(ResponseUtil.successWithData("Vehicle retrieved successfully", car));
+            // Use ObjectMapper to exclude null fields
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+            // Convert CarRequestDTO to a Map with nulls trimmed
+            Map<String, Object> cleanData = mapper.convertValue(car, new TypeReference<>() {});
+
+            return ResponseEntity.ok(ResponseUtil.successWithData("Vehicle retrieved successfully", cleanData));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(ResponseUtil.internalError("Error fetching vehicle: " + e.getMessage()));
         }
     }
+
 
     @PutMapping("/vehicles/{id}")
     public ResponseEntity<Map<String, Object>> updateCar(@PathVariable Long id, @RequestBody CarEntity car) {

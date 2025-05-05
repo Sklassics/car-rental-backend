@@ -114,27 +114,42 @@ public class BookingService {
 
 
 	
-//    public Booking getBooking(Long id) {
-//        return bookingRepository.findById(id).orElse(null);
-//    }
-//
-//    public List<Booking> getAllBookings() {
-//        return bookingRepository.findAll();
-//    }
+    public Booking getBookingsById(Long id) {
+        return bookingRepository.findById(id).orElse(null);
+    }
 
-//    public List<Booking> getBookingsByUserId(Long userId) {
-//        return bookingRepository.findByUserId(userId);
-//    }
+    public List<Booking> getAllBookings() {
+        return bookingRepository.findAll();
+    }
 
-//    public boolean cancelBooking(Long id) {
-//        Optional<Booking> optionalBooking = bookingRepository.findById(id);
-//        if (optionalBooking.isPresent()) {
-//            Booking booking = optionalBooking.get();
-//            booking.setStatus("CANCELLED");
-//            bookingRepository.save(booking);
-//            return true;
-//        }
-//        return false;
-//    }
+
+    public Booking updateBooking(Long id, Booking updatedBooking) {
+        Optional<Booking> optionalBooking = bookingRepository.findById(id);
+
+        if (optionalBooking.isEmpty()) {
+            return null;
+        }
+
+        Booking existingBooking = optionalBooking.get();
+
+        existingBooking.setCarId(updatedBooking.getCarId());
+        existingBooking.setUserId(updatedBooking.getUserId());
+        existingBooking.setFromDate(updatedBooking.getFromDate());
+        existingBooking.setToDate(updatedBooking.getToDate());
+
+        return bookingRepository.save(existingBooking);
+    }
+
+
+    public boolean cancelBooking(Long id) {
+        Optional<Booking> optionalBooking = bookingRepository.findById(id);
+        if (optionalBooking.isPresent()) {
+            Booking booking = optionalBooking.get();
+            booking.setStatus("CANCELLED");
+            bookingRepository.save(booking);
+            return true;
+        }
+        return false;
+    }
 
 }

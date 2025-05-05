@@ -127,59 +127,170 @@ public class ReservationSystem {
     }
 
 
-//
-//    @GetMapping
-//    public ResponseEntity<?> getAllReservations() {
-//        List<Reservation> reservations = reservationService.getAllReservations();
-//        if (reservations.isEmpty()) {
-//            return ResponseEntity
-//                    .status(404)
-//                    .body(ResponseUtil.notFound(ResponseUtil.ErrorMessages.VEHICLE_NOT_FOUND));
-//        }
-//        return ResponseEntity.ok(ResponseUtil.successWithData("Reservation Fetched Successfully !",reservations));
-//    }
-//
-//    @GetMapping("/{id}")
-//    public ResponseEntity<?> getReservationById(@PathVariable Long id) {
-//        return reservationService.getReservationById(id)
-//                .map(reservation -> ResponseEntity.ok(
-//                        ResponseUtil.successWithData(
-//                            String.format("Reservation Fetched Successfully for the id %d", id), 
-//                            reservation)))
-//                .orElse(ResponseEntity
-//                        .status(404)
-//                        .body(ResponseUtil.notFound(
-//                                ResponseUtil.ErrorMessages.notFoundWithId("Reservation", id))));
-//    }
-//
-//
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<?> deleteReservation(@PathVariable Long id) {
-//        boolean deleted = reservationService.deleteReservation(id);
-//        if (deleted) {
-//            return ResponseEntity.ok(ResponseUtil.successMessage("Reservation deleted successfully"));
-//        } else {
-//            return ResponseEntity
-//                    .status(404)
-//                    .body(ResponseUtil.notFound(
-//                            ResponseUtil.ErrorMessages.notFoundWithId("Reservation", id)));
-//        }
-//    }
-//    
-//    
-//    @PutMapping("/{id}")
-//    public ResponseEntity<?> updateReservation(@PathVariable Long id, @RequestBody Reservation updatedReservation) {
-//        Reservation reservation = reservationService.updateReservation(id, updatedReservation);
-//        
-//        if (reservation != null) {
-//            return ResponseEntity.ok(ResponseUtil.successMessage("Reservation Updated successfully"));
-//        } else {
-//            return ResponseEntity
-//                    .status(404)
-//                    .body(ResponseUtil.notFound(
-//                            ResponseUtil.ErrorMessages.notFoundWithId("Reservation", id)));
-//        }
-//    }
+
+    @GetMapping
+    public ResponseEntity<?> getAllReservations(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        try {
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format."));
+            }
+
+            String token = authorizationHeader.substring(7);
+
+            if (jwtService.isTokenExpired(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ResponseUtil.unauthorized("Token has expired."));
+            }
+
+            String role = jwtService.extractRole(token);
+            if (role == null || !role.equalsIgnoreCase("admin")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ResponseUtil.unauthorized("Unauthorized access. Role mismatch."));
+            }
+
+            Long userId = jwtService.extractUserId(token);
+
+            List<Reservation> reservations = reservationService.getAllReservations();
+            if (reservations.isEmpty()) {
+                return ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body(ResponseUtil.notFound(ResponseUtil.ErrorMessages.VEHICLE_NOT_FOUND));
+            }
+
+            return ResponseEntity.ok(ResponseUtil.successWithData("Reservation Fetched Successfully!", reservations));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseUtil.internalError("An error occurred while fetching reservations."));
+        }
+    }
+
+
+    	
+    	
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getReservationById(@RequestHeader("Authorization") String authorizationHeader, @PathVariable Long id) {
+        try {
+            // Validate Authorization Header
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body(ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format."));
+            }
+
+            String token = authorizationHeader.substring(7);
+
+            if (jwtService.isTokenExpired(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body(ResponseUtil.unauthorized("Token has expired. JWT token is not valid."));
+            }
+
+            String role = jwtService.extractRole(token);
+            if (role == null || !role.equalsIgnoreCase("admin")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body(ResponseUtil.unauthorized("Unauthorized access. Role mismatch."));
+            }
+
+            Long userId = jwtService.extractUserId(token);
+
+            return reservationService.getReservationById(id)
+                    .map(reservation -> ResponseEntity.ok(
+                            ResponseUtil.successWithData(
+                                    String.format("Reservation Fetched Successfully for the id %d", id),
+                                    reservation)))
+                    .orElse(ResponseEntity
+                            .status(HttpStatus.NOT_FOUND)
+                            .body(ResponseUtil.notFound(
+                                    ResponseUtil.ErrorMessages.notFoundWithId("Reservation", id))));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body(ResponseUtil.internalError("An unexpected error occurred while fetching the reservation."));
+        }
+    }
+
+
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteReservation(@RequestHeader("Authorization") String authorizationHeader, @PathVariable Long id) {
+        try {
+            // Validate Authorization Header
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body(ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format."));
+            }
+
+            String token = authorizationHeader.substring(7);
+
+            if (jwtService.isTokenExpired(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body(ResponseUtil.unauthorized("Token has expired. JWT token is not valid."));
+            }
+
+            String role = jwtService.extractRole(token);
+            if (role == null || !role.equalsIgnoreCase("customer")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body(ResponseUtil.unauthorized("Unauthorized access. Role mismatch."));
+            }
+
+            Long userId = jwtService.extractUserId(token);
+
+            // Call the service to delete the reservation
+            boolean deleted = reservationService.deleteReservation(id);
+            if (deleted) {
+                return ResponseEntity.ok(ResponseUtil.successMessage("Reservation deleted successfully"));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                     .body(ResponseUtil.notFound(ResponseUtil.ErrorMessages.notFoundWithId("Reservation", id)));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body(ResponseUtil.internalError("An unexpected error occurred while deleting the reservation."));
+        }
+    }
+
+    
+   
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateReservation(@PathVariable Long id, @RequestBody Reservation updatedReservation, @RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            // Validate Authorization Header
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body(ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format."));
+            }
+
+            String token = authorizationHeader.substring(7);
+
+            if (jwtService.isTokenExpired(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body(ResponseUtil.unauthorized("Token has expired. JWT token is not valid."));
+            }
+
+            String role = jwtService.extractRole(token);
+            if (role == null || !role.equalsIgnoreCase("customer")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                     .body(ResponseUtil.unauthorized("Unauthorized access. Role mismatch."));
+            }
+
+            Long userId = jwtService.extractUserId(token);
+
+            // Call the service to update the reservation
+            Reservation reservation = reservationService.updateReservation(id, updatedReservation);
+
+            if (reservation != null) {
+                return ResponseEntity.ok(ResponseUtil.successMessage("Reservation updated successfully"));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                     .body(ResponseUtil.notFound(
+                                             ResponseUtil.ErrorMessages.notFoundWithId("Reservation", id)));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body(ResponseUtil.internalError("An unexpected error occurred while updating the reservation."));
+        }
+    }
+
 
 
 }

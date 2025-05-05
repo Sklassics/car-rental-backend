@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sklassics.cars.dtos.CarRequestDTO;
 import com.sklassics.cars.entities.CarEntity;
 import com.sklassics.cars.exceptions.CustomExceptions.CarNotFoundException;
@@ -13,9 +14,12 @@ import com.sklassics.cars.repositories.CarRepository;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 
 @Service
@@ -151,29 +155,91 @@ public class CarService {
 //    }
 
     
-    public List<CarRequestDTO> getAllCars() {
+//    public List<CarRequestDTO> getAllCars() {
+//        System.out.println("Fetching all cars from the database...");
+//        List<CarEntity> cars = carRepository.findAll();
+//        System.out.println("Total cars fetched from DB: " + cars.size());
+//
+//        return cars.stream().map(car -> {
+//            try {
+//                System.out.println("Processing car ID: " + car.getId());
+//
+//                // Debugging image URLs
+//                System.out.println("Original Image URLs (Graph API paths): " + car.getImageUrls());
+//
+//                List<String> secureLinks = car.getImageUrls().stream()
+//                    .map(url -> {
+//                        try {
+//                            
+//                            String path = url.substring(url.indexOf("/root:/") + 7);
+//                            System.out.println("Extracted path for car ID " + car.getId() + ": " + path);
+//
+//                            
+//                            String secureLink = oneDriveService.generateDirectDownloadLink(path);
+//                            System.out.println("Generated secure link for car ID " + car.getId() + ": " + secureLink);
+//
+//                            return secureLink;
+//                        } catch (Exception e) {
+//                            System.err.println("Error generating view link for URL: " + url + " (Car ID: " + car.getId() + ")");
+//                            e.printStackTrace();
+//                            return null;
+//                        }
+//                    })
+//                    .filter(Objects::nonNull)
+//                    .collect(Collectors.toList());
+//
+//                System.out.println("Secure viewable image links count for car ID " + car.getId() + ": " + secureLinks.size());
+//
+//                return new CarRequestDTO(
+//                    car.getId(),
+//                    car.getCarName(),
+//                    car.getCarModel(),
+//                    car.getYear(),
+//                    car.getVehicleType(),
+//                    car.getFuelType(),
+//                    car.getTransmission(),
+//                    car.getMileage(),
+//                    car.getSeatingCapacity(),
+//                    car.getColor(),
+//                    secureLinks,
+//                    car.getCost(),
+//                    car.isAvailable(),
+//                    car.getLocation()
+//                );
+//            }
+//            catch (ConversionException e) {
+//                System.err.println("Conversion error for car ID " + car.getId() + ": " + e.getMessage());
+//                e.printStackTrace();
+//                return null;
+//            } catch (Exception e) {
+//                System.err.println("Error handling car ID " + car.getId() + ": " + e.getMessage());
+//                e.printStackTrace();
+//                return null;
+//            }
+//        }).filter(Objects::nonNull)
+//          .collect(Collectors.toList());
+//    }
+    
+    public List<Map<String, Object>> getAllCars() {
         System.out.println("Fetching all cars from the database...");
         List<CarEntity> cars = carRepository.findAll();
         System.out.println("Total cars fetched from DB: " + cars.size());
 
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
         return cars.stream().map(car -> {
             try {
                 System.out.println("Processing car ID: " + car.getId());
-
-                // Debugging image URLs
                 System.out.println("Original Image URLs (Graph API paths): " + car.getImageUrls());
 
                 List<String> secureLinks = car.getImageUrls().stream()
                     .map(url -> {
                         try {
-                            // Extract path from Graph API URL
                             String path = url.substring(url.indexOf("/root:/") + 7);
                             System.out.println("Extracted path for car ID " + car.getId() + ": " + path);
-
-                            // Generate direct download link
                             String secureLink = oneDriveService.generateDirectDownloadLink(path);
                             System.out.println("Generated secure link for car ID " + car.getId() + ": " + secureLink);
-
                             return secureLink;
                         } catch (Exception e) {
                             System.err.println("Error generating view link for URL: " + url + " (Car ID: " + car.getId() + ")");
@@ -184,9 +250,7 @@ public class CarService {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
-                System.out.println("Secure viewable image links count for car ID " + car.getId() + ": " + secureLinks.size());
-
-                return new CarRequestDTO(
+                CarRequestDTO dto = new CarRequestDTO(
                     car.getId(),
                     car.getCarName(),
                     car.getCarModel(),
@@ -202,11 +266,10 @@ public class CarService {
                     car.isAvailable(),
                     car.getLocation()
                 );
-            }
-            catch (ConversionException e) {
-                System.err.println("Conversion error for car ID " + car.getId() + ": " + e.getMessage());
-                e.printStackTrace();
-                return null;
+
+                // Convert to Map while ignoring nulls
+                return mapper.convertValue(dto, Map.class);
+
             } catch (Exception e) {
                 System.err.println("Error handling car ID " + car.getId() + ": " + e.getMessage());
                 e.printStackTrace();
@@ -216,9 +279,13 @@ public class CarService {
           .collect(Collectors.toList());
     }
 
+
     public CarRequestDTO getCarById(Long id) {
         CarEntity car = carRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Car not found with ID: " + id));
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
         try {
             System.out.println("Fetching car by ID: " + car.getId());
@@ -227,7 +294,6 @@ public class CarService {
             List<String> secureLinks = car.getImageUrls().stream()
                     .map(url -> {
                         try {
-                            // Extract path from Graph API URL
                             String path = url.substring(url.indexOf("/root:/") + 7);
                             return oneDriveService.generateDirectDownloadLink(path);
                         } catch (Exception e) {
@@ -238,32 +304,80 @@ public class CarService {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
-            System.out.println("Secure viewable image links count: " + secureLinks.size());
+            CarRequestDTO carRequestDTO = new CarRequestDTO(
+                    car.getId(),
+                    car.getCarName(),
+                    car.getCarModel(),
+                    car.getYear(),
+                    car.getVehicleType(),
+                    car.getFuelType(),
+                    car.getTransmission(),
+                    car.getMileage(),
+                    car.getSeatingCapacity(),
+                    car.getColor(),
+                    secureLinks,
+                    car.getCost(),
+                    car.isAvailable(),
+                    car.getLocation()
+            );
 
-            return new CarRequestDTO(
-            		  car.getId(),
-
-                      car.getCarName(),
-                      car.getCarModel(),
-                      car.getYear(),
-                      car.getVehicleType(),
-                      car.getFuelType(),
-                      car.getTransmission(),
-                      car.getMileage(),
-                      car.getSeatingCapacity(),
-                      car.getColor(),
-                      secureLinks,
-                      car.getCost(),
-                      car.isAvailable(),
-                      car.getLocation()
-                  );
+            // Remove null values by serializing and deserializing
+            String jsonWithoutNulls = mapper.writeValueAsString(carRequestDTO);
+            return mapper.readValue(jsonWithoutNulls, CarRequestDTO.class);
 
         } catch (Exception e) {
-            System.err.println("Error processing car ID " + car.getId() + ": " + e.getMessage());
-            throw new RuntimeException("Error processing car data");
+            System.err.println("Error processing car ID " + id + ": " + e.getMessage());
+            throw new RuntimeException("Error processing car data for ID: " + id, e);
         }
     }
 
+//  public CarRequestDTO getCarById(Long id) {
+//  CarEntity car = carRepository.findById(id)
+//          .orElseThrow(() -> new RuntimeException("Car not found with ID: " + id));
+//
+//  try {
+//      System.out.println("Fetching car by ID: " + car.getId());
+//      System.out.println("Image URLs (Graph API paths): " + car.getImageUrls());
+//
+//      List<String> secureLinks = car.getImageUrls().stream()
+//              .map(url -> {
+//                  try {
+//                      // Extract path from Graph API URL
+//                      String path = url.substring(url.indexOf("/root:/") + 7);
+//                      return oneDriveService.generateDirectDownloadLink(path);
+//                  } catch (Exception e) {
+//                      System.err.println("Error generating view link for " + url + ": " + e.getMessage());
+//                      return null;
+//                  }
+//              })
+//              .filter(Objects::nonNull)
+//              .collect(Collectors.toList());
+//
+//      System.out.println("Secure viewable image links count: " + secureLinks.size());
+//
+//      return new CarRequestDTO(
+//      		  car.getId(),
+//
+//                car.getCarName(),
+//                car.getCarModel(),
+//                car.getYear(),
+//                car.getVehicleType(),
+//                car.getFuelType(),
+//                car.getTransmission(),
+//                car.getMileage(),
+//                car.getSeatingCapacity(),
+//                car.getColor(),
+//                secureLinks,
+//                car.getCost(),
+//                car.isAvailable(),
+//                car.getLocation()
+//            );
+//
+//  } catch (Exception e) {
+//      System.err.println("Error processing car ID " + car.getId() + ": " + e.getMessage());
+//      throw new RuntimeException("Error processing car data");
+//  }
+//}
 
 
 //    public CarEntity addImagesToCar(Long id, List<MultipartFile> images) {

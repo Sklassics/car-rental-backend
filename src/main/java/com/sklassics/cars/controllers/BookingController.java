@@ -118,99 +118,132 @@ public class BookingController {
 
 
 
-//
-//    @GetMapping("/{id}")
-//    public Map<String, Object> getBooking(@RequestHeader("Authorization") String authorizationHeader, @PathVariable Long id) {
-//    	 try {
-//             // Validate Authorization Header
-//             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-//                 return ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format.");
-//             }
-//
-//             String token = authorizationHeader.substring(7);
-//
-//             if (jwtService.isTokenExpired(token)) {
-//                 return ResponseUtil.unauthorized("Token has expired. JWT token is not valid.");
-//             }
-//
-//             String role = jwtService.extractRole(token);
-//
-//             if (role == null || !role.equalsIgnoreCase("student")) {
-//                 return ResponseUtil.unauthorized("Unauthorized access. Role mismatch.");
-//             }
-//
-//             Long userId = jwtService.extractUserId(token);
-//             Booking booking = bookingService.getBooking(id);
-//        if (booking == null) {
-//            return ResponseUtil.notFound(ResponseUtil.ErrorMessages.notFoundWithId("Booking", id));
-//        }
-//        return ResponseUtil.successWithData("Booking retrieved successfully", booking);
-//    }
 
-//    @GetMapping
-//    public List<Booking> getAllBookings(@RequestHeader("Authorization") String authorizationHeader) {
-//    	 try {
-//             // Validate Authorization Header
-//             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-//                 return ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format.");
-//             }
-//
-//             String token = authorizationHeader.substring(7);
-//
-//             if (jwtService.isTokenExpired(token)) {
-//                 return ResponseUtil.unauthorized("Token has expired. JWT token is not valid.");
-//             }
-//
-//             String role = jwtService.extractRole(token);
-//
-//             if (role == null || !role.equalsIgnoreCase("student")) {
-//                 return ResponseUtil.unauthorized("Unauthorized access. Role mismatch.");
-//             }
-//
-//             Long userId = jwtService.extractUserId(token);
-//        return bookingService.getAllBookings();
-//    }
+    @GetMapping("/{id}")
+    public Map<String, Object> getBooking(@RequestHeader("Authorization") String authorizationHeader, @PathVariable Long id) {
+        try {
+            // Validate Authorization Header
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format.");
+            }
+
+            String token = authorizationHeader.substring(7);
+
+            if (jwtService.isTokenExpired(token)) {
+                return ResponseUtil.unauthorized("Token has expired. JWT token is not valid.");
+            }
+
+            String role = jwtService.extractRole(token);
+
+            if (role == null || !role.equalsIgnoreCase("admin")) {
+                return ResponseUtil.unauthorized("Unauthorized access. Role mismatch.");
+            }
+
+            Long userId = jwtService.extractUserId(token);
+            Booking booking = bookingService.getBookingsById(id);
+
+            if (booking == null) {
+                return ResponseUtil.notFound(ResponseUtil.ErrorMessages.notFoundWithId("Booking", id));
+            }
+
+            return ResponseUtil.successWithData("Booking retrieved successfully", booking);
+        } catch (Exception e) {
+            return ResponseUtil.internalError("An error occurred while retrieving the booking.");
+        }
+    }
+
+    	 
+    	 
+
+    @GetMapping
+    public Map<String, Object> getAllBookings(@RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            // Validate Authorization Header
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format.");
+            }
+
+            String token = authorizationHeader.substring(7);
+
+            if (jwtService.isTokenExpired(token)) {
+                return ResponseUtil.unauthorized("Token has expired. JWT token is not valid.");
+            }
+
+            String role = jwtService.extractRole(token);
+
+            if (role == null || !role.equalsIgnoreCase("admin")) {
+                return ResponseUtil.unauthorized("Unauthorized access. Role mismatch.");
+            }
+
+            Long userId = jwtService.extractUserId(token);
+            List<Booking> bookings = bookingService.getAllBookings();
+            return ResponseUtil.successWithData("Bookings retrieved successfully", bookings);
+        } catch (Exception e) {
+            return ResponseUtil.internalError("An error occurred while retrieving the bookings.");
+        }
+    }
 
 
+    @PutMapping("/update/{id}")
+    public Map<String, Object> updateBooking(@RequestHeader("Authorization") String authorizationHeader, @PathVariable Long id, @RequestBody Booking booking) {
 
+        try {
 
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format.");
+            }
 
+            String token = authorizationHeader.substring(7);
 
-//    @PutMapping("/update/{id}")
-//    public Map<String, Object> updateBooking(@RequestHeader("Authorization") String authorizationHeader, @PathVariable Long id, @RequestBody Booking booking) {
-//        // Validate token
-//        Map<String, Object> tokenValidationResponse = validateToken(authorizationHeader);
-//        if (tokenValidationResponse != null) {
-//            return tokenValidationResponse;
-//        }
-//
-//        try {
-//            Booking updatedBooking = bookingService.updateBooking(id, booking);
-//            if (updatedBooking == null) {
-//                return ResponseUtil.notFound(ResponseUtil.ErrorMessages.notFoundWithId("Booking", id));
-//            }
-//            return ResponseUtil.successWithData("Booking updated successfully", updatedBooking);
-//        } catch (Exception e) {
-//            return ResponseUtil.internalError("An unexpected error occurred: " + e.getMessage());
-//        }
-//    }
+            if (jwtService.isTokenExpired(token)) {
+                return ResponseUtil.unauthorized("Token has expired. JWT token is not valid.");
+            }
 
-//    @DeleteMapping("/{id}")
-//    public Map<String, Object> deleteBooking(@RequestHeader("Authorization") String authorizationHeader, @PathVariable Long id) {
-//        // Validate token
-//        Map<String, Object> tokenValidationResponse = validateToken(authorizationHeader);
-//        if (tokenValidationResponse != null) {
-//            return tokenValidationResponse;
-//        }
-//
-//        try {
-//           boolean isDeleted = bookingService.cancelBooking(id);
-//            if (!isDeleted) {
-//                return ResponseUtil.notFound(ResponseUtil.ErrorMessages.notFoundWithId("Booking", id));
-//            }
-//            return ResponseUtil.successMessage("Booking deleted successfully");
-//        } catch (Exception e) {
-//            return ResponseUtil.internalError("An unexpected error occurred: " + e.getMessage());
-//        }
-//    }
+            String role = jwtService.extractRole(token);
+
+            if (role == null || !role.equalsIgnoreCase("admin")) {
+                return ResponseUtil.unauthorized("Unauthorized access. Role mismatch.");
+            }
+            
+            Booking updatedBooking = bookingService.updateBooking(id, booking);
+            if (updatedBooking == null) {
+                return ResponseUtil.notFound(ResponseUtil.ErrorMessages.notFoundWithId("Booking", id));
+            }
+            return ResponseUtil.successMessage("Booking updated successfully");
+        } catch (Exception e) {
+            return ResponseUtil.internalError("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public Map<String, Object> deleteBooking(@RequestHeader("Authorization") String authorizationHeader, @PathVariable Long id) {
+       
+
+        try {
+        	
+        	 if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                 return ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format.");
+             }
+
+             String token = authorizationHeader.substring(7);
+
+             if (jwtService.isTokenExpired(token)) {
+                 return ResponseUtil.unauthorized("Token has expired. JWT token is not valid.");
+             }
+
+             String role = jwtService.extractRole(token);
+
+             if (role == null || !role.equalsIgnoreCase("admin")) {
+                 return ResponseUtil.unauthorized("Unauthorized access. Role mismatch.");
+             }
+             
+           boolean isDeleted = bookingService.cancelBooking(id);
+            if (!isDeleted) {
+                return ResponseUtil.notFound(ResponseUtil.ErrorMessages.notFoundWithId("Booking", id));
+            }
+            return ResponseUtil.successMessage("Booking deleted successfully");
+        } catch (Exception e) {
+            return ResponseUtil.internalError("An unexpected error occurred: " + e.getMessage());
+        }
+    }
 }

@@ -93,7 +93,7 @@ public class PaymentService {
             System.out.println("Applied 15% discount: -" + discount);
         }
 
-        double insuranceCost = 0.0;
+        
         double cleaningFee = 199.0;
 
         double extraCost = 0.0;
@@ -104,7 +104,7 @@ public class PaymentService {
             System.out.println("Extra hours: " + extraHours + ", Extra cost: " + extraCost);
         }
 
-        double totalCost = roundToTwoDecimals(carPrice - discount + insuranceCost + cleaningFee + extraCost);
+        double totalCost = roundToTwoDecimals(carPrice - discount + cleaningFee + extraCost);
         System.out.println("Total rental cost after all additions: " + totalCost);
 
         PaymentResponse response = new PaymentResponse();
@@ -114,7 +114,6 @@ public class PaymentService {
 
         response.setCarPrice(carPrice);
         response.setDiscount(discount);
-        response.setInsuranceCost(insuranceCost);
         response.setCleaningFee(cleaningFee);
 
         return response;

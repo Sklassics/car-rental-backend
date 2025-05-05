@@ -31,11 +31,11 @@ public class WaitingController {
     public ResponseEntity<?> getWaitingProfile(@RequestHeader("Authorization") String authHeader) {
         try {
             String token = authHeader.replace("Bearer ", "");
-            String mobileNumber = jwtService.extractMobileNumber(token);
-            Optional<User> optionalUser = userRepository.findByMobile(mobileNumber);
+            String email = jwtService.extractEmailFromToken(token);
+            Optional<User> optionalUser = userRepository.findByEmail(email);
             if (optionalUser.get().getAddress() == null) {
                 return ResponseEntity.ok(ResponseUtil.notFound(
-                    ResponseUtil.ErrorMessages.notFoundWithId("User", mobileNumber)
+                    ResponseUtil.ErrorMessages.notFoundWithId("User", email)
                 ));
             }
 

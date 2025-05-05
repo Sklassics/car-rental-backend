@@ -125,7 +125,11 @@ public class ReservationService {
 	}
 
 
+	public Optional<Reservation> getReservationById(Long id) {
+	    return reservationRepository.findById(id);
+	}
 
+	
 
     public List<Reservation> getAllReservations() {
         return reservationRepository.findAll();

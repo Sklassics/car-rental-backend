@@ -70,7 +70,7 @@ public class OtpService {
 		String otp = String.format("%06d", new Random().nextInt(999999));
 	
 		// Save OTP in cache
-		otpCacheMap.put(mobile, new OtpCache(email, otp));
+		otpCacheMap.put(email, new OtpCache(mobile, email, otp));
 		System.out.println("Generated OTP " + otp + " for mobile: " + mobile + ", email: " + email);
 	
 		// Send OTP via Email using EmailService
@@ -85,36 +85,36 @@ public class OtpService {
 	}
 	
 
-	public ResponseEntity<?> validateMobileEmailOtp(String mobile, String otp) {
-		OtpCache cached = otpCacheMap.get(mobile);
-	
-		if (cached == null) {
-			return ResponseEntity.badRequest()
-					.body(ResponseUtil.notFound("No OTP generated for this mobile number."));
-		}
-	
-		if (!cached.getOtp().equals(otp)) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-					.body(ResponseUtil.unauthorized("Invalid OTP."));
-		}
-	
-		// Create and save user
-		User user = new User();
-		user.setMobile(mobile);
-		user.setEmail(cached.getEmail());
-		userRepository.save(user);
-	
-		// Clean up cache
-		otpCacheMap.remove(mobile);
-	
-		// Generate token
-		String token = jwtService.generateToken(mobile, "customer", user.getId());
-	
-		Map<String, Object> data = new HashMap<>();
-		data.put("token", token);
-		return ResponseEntity.ok(ResponseUtil.successWithData("OTP Verified Successfully!", data));
+	public ResponseEntity<?> validateMobileEmailOtp(String email, String otp) {
+	    OtpCache cached = otpCacheMap.get(email);
+
+	    if (cached == null) {
+	        return ResponseEntity.badRequest()
+	                .body(ResponseUtil.notFound("No OTP generated for this email."));
+	    }
+
+	    if (!cached.getOtp().equals(otp)) {
+	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+	                .body(ResponseUtil.unauthorized("Invalid OTP."));
+	    }
+
+	    // Create and save user
+	    User user = new User();
+	    user.setMobile(cached.getMobile());
+	    user.setEmail(cached.getEmail());
+	    userRepository.save(user);
+
+	    // Clean up cache after successful validation
+	    otpCacheMap.remove(email); 
+
+	    // Generate token
+	    String token = jwtService.generateToken(cached.getMobile(), "customer", user.getId());  // Use cached.getMobile() to fetch the correct mobile number
+
+	    Map<String, Object> data = new HashMap<>();
+	    data.put("token", token);
+
+	    return ResponseEntity.ok(ResponseUtil.successWithData("OTP Verified Successfully!", data));
 	}
-	
 
 
 
@@ -131,8 +131,11 @@ public class OtpService {
 					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 							.body(ResponseUtil.internalError("Failed to send OTP email. Please try again."));
 				}
-		return ResponseEntity.ok(ResponseUtil.successMessage("OTP has been sent to mobile number: " + email));
+		return ResponseEntity.ok(ResponseUtil.successMessage("OTP has been sent to email: " + email));
 	}
+	
+	
+	
 
 	public ResponseEntity<?> validateLoginOtp(String email, String otp) {
 	    // Basic null or empty check

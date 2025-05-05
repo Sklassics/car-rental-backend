@@ -1,10 +1,10 @@
 package com.sklassics.cars.controllers;
 
+import com.sklassics.cars.services.RazorpayService;
+import com.sklassics.cars.services.utility.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import com.sklassics.cars.services.RazorpayService;
 
 import java.util.Map;
 
@@ -16,11 +16,15 @@ public class RazorpayController {
     private RazorpayService razorpayService;
 
     @PostMapping("/create-order")
-    public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> data) {
+    public ResponseEntity<Map<String, Object>> createOrder(@RequestBody Map<String, Object> data) {
         System.out.println("Received request to create Razorpay order");
 
         try {
             System.out.println("Extracting amount from request data...");
+            if (!data.containsKey("amount")) {
+                return ResponseEntity.badRequest().body(ResponseUtil.validationError("Amount is required"));
+            }
+
             Double amount = Double.valueOf(data.get("amount").toString());
             System.out.println("Amount extracted: " + amount);
 
@@ -28,10 +32,14 @@ public class RazorpayController {
             Map<String, Object> order = razorpayService.createOrder(amount);
 
             System.out.println("Razorpay order created successfully: " + order);
-            return ResponseEntity.ok(order);
+            return ResponseEntity.ok(ResponseUtil.successWithData("Order created successfully", order));
+
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid amount format: " + e.getMessage());
+            return ResponseEntity.badRequest().body(ResponseUtil.validationError("Invalid amount format"));
         } catch (Exception e) {
             System.err.println("Error creating Razorpay order: " + e.getMessage());
-            return ResponseEntity.badRequest().body("Error creating Razorpay order: " + e.getMessage());
+            return ResponseEntity.status(500).body(ResponseUtil.internalError("Error creating Razorpay order: " + e.getMessage()));
         }
     }
 }
