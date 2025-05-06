@@ -217,6 +217,8 @@ public class UserManagement {
             // Prepare the user data map
             Map<String, Object> userData = Map.of(
                 "fullName", user.getFullName(),
+                "mobile",user.getMobile(),
+                "email",user.getEmail(),
                 "address", user.getAddress(),
                 "aadhaarNumber", user.getAadhaarNumber(),
                 "aadhaarFilePath", oneDriveService.convertFileToBase64(user.getAadhaarFilePath()),

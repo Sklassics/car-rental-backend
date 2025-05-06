@@ -263,8 +263,7 @@ public class CarService {
                     car.getColor(),
                     secureLinks,
                     car.getCost(),
-                    car.isAvailable(),
-                    car.getLocation()
+                    car.isAvailable()
                 );
 
                 // Convert to Map while ignoring nulls
@@ -317,8 +316,8 @@ public class CarService {
                     car.getColor(),
                     secureLinks,
                     car.getCost(),
-                    car.isAvailable(),
-                    car.getLocation()
+                    car.isAvailable()
+
             );
 
             // Remove null values by serializing and deserializing

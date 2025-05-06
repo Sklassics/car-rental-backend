@@ -19,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.sklassics.cars.admin.entities.Admin;
 import com.sklassics.cars.admin.repositories.AdminRepository;
+import com.sklassics.cars.customadmin.entities.CustomAdmin;
+import com.sklassics.cars.customadmin.repositories.CustomAdminRepository;
 import com.sklassics.cars.entities.User;
 import com.sklassics.cars.exceptions.CustomExceptions.UserNotFoundException;
 import com.sklassics.cars.repositories.UserRepository;
@@ -43,6 +45,9 @@ public class OtpService {
 
 	@Autowired
 	private JavaMailSender javaMailSender;
+	
+	  @Autowired
+	    private CustomAdminRepository customAdminRepository;
 
 	@Autowired
 	private EmailService emailService;
@@ -175,6 +180,11 @@ public class OtpService {
 
 	public Long getAdminByMobile(String mobile) {
 		return adminRepository.findByMobileNumber(mobile).map(Admin::getId)
+				.orElseThrow(() -> new UserNotFoundException("User not found with mobile: " + mobile));
+	}
+	
+	public Long getCustomAdminByMobile(String mobile) {
+		return customAdminRepository.findByMobileNumber(mobile).map(CustomAdmin::getId)
 				.orElseThrow(() -> new UserNotFoundException("User not found with mobile: " + mobile));
 	}
 	

@@ -29,6 +29,14 @@ import org.springframework.stereotype.Service;
             }
         }
         
+        public void sendNewsletterSubscriptionEmail(String toEmail) {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(toEmail);
+            message.setSubject("Thank you for subscribing to our newsletter!");
+            message.setText("Hi there,\n\nThank you for subscribing! You'll now receive the latest updates.\n\n- Team");
+
+            javaMailSender.send(message);
+        }
 
         
     }

@@ -43,8 +43,7 @@ public class PaymentController {
     }
     
     @PostMapping("/transaction-details")
-    public ResponseEntity<?> saveTransaction(@RequestParam("mobile") String mobile,
-                                             @RequestParam("email") String email,
+    public ResponseEntity<?> saveTransaction(
                                              @RequestParam("transactionId") String transactionId,
                                              @RequestParam("amount") Double amount,
                                              @RequestParam("screenshot") MultipartFile screenshot,
@@ -77,7 +76,7 @@ public class PaymentController {
 
             // Save the transaction via service
             TransactionUnderVerification savedTransaction = transactionUnderVerificationService.saveTransaction(
-                    userId, mobile, email, transactionId, amount, screenshot,action);
+                    userId, transactionId, amount, screenshot,action);
 
             return ResponseEntity.ok(savedTransaction);
 
@@ -128,47 +127,68 @@ public class PaymentController {
     
     
 
-    @PutMapping("/{id}/verify")
+    @PutMapping("/verify")
     public ResponseEntity<?> verifyTransaction(
-            @PathVariable String id,
-            @RequestParam boolean isVerified,
-            @RequestHeader("Authorization") String authorizationHeader) {
+            @RequestBody Map<String, Object> payload,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+
         try {
-            // Token validation
+            // ✅ Extract and validate fields from body
+            String transactionId = (String) payload.get("transactionId");
+            Object bookingIdObj = payload.get("bookingId");
+            Boolean isVerified = (Boolean) payload.get("isVerified");
+            
+
+            if (transactionId == null || transactionId.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(ResponseUtil.validationError("Transaction ID is required."));
+            }
+
+            if (bookingIdObj == null) {
+                return ResponseEntity.badRequest().body(ResponseUtil.validationError("Booking ID is required."));
+            }
+
+            Long bookingId;
+            try {
+                bookingId = ((Number) bookingIdObj).longValue();
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body(ResponseUtil.validationError("Invalid booking ID format."));
+            }
+
+            if (isVerified == null) {
+                return ResponseEntity.badRequest().body(ResponseUtil.validationError("isVerified must be true or false."));
+            }
+
+            // ✅ Token checks
             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ResponseUtil.unauthorized("Missing or invalid token. Token must be in Bearer format."));
             }
 
             String token = authorizationHeader.substring(7);
             if (jwtService.isTokenExpired(token)) {
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ResponseUtil.unauthorized("Token has expired. JWT token is not valid."));
             }
 
             String role = jwtService.extractRole(token);
             if (role == null || !role.equalsIgnoreCase("admin")) {
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ResponseUtil.unauthorized("Unauthorized access. Role mismatch."));
             }
 
-            // Perform transaction update verification
-            TransactionUnderVerification updatedTransaction = 
-                transactionUnderVerificationService.updateAdminVerification(id, isVerified);
+            // ✅ Business logic
+            TransactionUnderVerification updatedTransaction =
+                    transactionUnderVerificationService.updateAdminVerification(transactionId, isVerified, bookingId);
 
-            return ResponseEntity.ok(
-                ResponseUtil.successMessage("Transaction verification successful.")
-            );
+            return ResponseEntity.ok(ResponseUtil.successMessage("Transaction verification successful."));
 
         } catch (Exception e) {
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ResponseUtil.internalError("Something went wrong: " + e.getMessage()));
         }
     }
+
+
 
 
     @GetMapping("/{id}")
