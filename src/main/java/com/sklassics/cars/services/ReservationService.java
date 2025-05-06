@@ -14,10 +14,12 @@ import org.springframework.stereotype.Service;
 import com.sklassics.cars.entities.CarEntity;
 import com.sklassics.cars.entities.Reservation;
 import com.sklassics.cars.entities.Transaction;
+import com.sklassics.cars.entities.TransactionUnderVerification;
 import com.sklassics.cars.exceptions.CustomExceptions.CarNotFoundException;
 import com.sklassics.cars.repositories.CarRepository;
 import com.sklassics.cars.repositories.ReservationRepository;
 import com.sklassics.cars.repositories.TransactionRepository;
+import com.sklassics.cars.repositories.TransactionUnderVerificationRepository;
 
 @Service
 public class ReservationService {
@@ -33,6 +35,9 @@ public class ReservationService {
 	
 	@Autowired
     private OneDriveService oneDriveService;
+	
+	@Autowired
+    private TransactionUnderVerificationRepository transactionUnderVerificationRepository;
 
 	
 	public Reservation saveReservation(Reservation reservation, Long userId) {
@@ -59,19 +64,80 @@ public class ReservationService {
 	    return reservationRepository.save(reservation);
 	}
 
+//	public List<Map<String, Object>> getReservationsByUserId(Long userId) {
+//	    // Fetch the reservations based on the userId
+//	    List<Reservation> reservations = reservationRepository.findByUserId(userId);
+//	    
+//	    List<Map<String, Object>> totalReservations = new ArrayList<>();
+//	    
+//	    // Iterate over each reservation to fetch car details and create the result
+//	    for (Reservation reservation : reservations) {
+//	        // Create a map to hold the reservation data and associated car details
+//	        Map<String, Object> reservationMap = new HashMap<>();
+//	        
+//	        // Add reservation details
+//	        reservationMap.put("reservationId", reservation.getId());
+//	        reservationMap.put("userId", reservation.getUserId());
+//	        reservationMap.put("fromDate", reservation.getFromDate());
+//	        reservationMap.put("toDate", reservation.getToDate());
+//	        reservationMap.put("pickupTime", reservation.getPickupTime());
+//	        reservationMap.put("dropTime", reservation.getDropTime());
+//	        reservationMap.put("paymentId", reservation.getPaymentId());
+//	        reservationMap.put("status", reservation.getStatus());
+//	        reservationMap.put("createdAt", reservation.getCreatedAt());
+//
+//	        // Fetch car details based on carId
+//	        CarEntity car = carRepository.findById(reservation.getCarId()).orElse(null);
+//	        
+//	        if (car != null) {
+//	            // Add car details to the map
+//	            Map<String, Object> carDetails = new HashMap<>();
+//	            carDetails.put("carId", car.getId());
+//	            carDetails.put("carName", car.getCarName());
+//	            carDetails.put("carModel", car.getCarModel());
+////	            carDetails.put("year", car.getYear());
+////	            carDetails.put("fuelType", car.getFuelType());
+////	            carDetails.put("transmission", car.getTransmission());
+////	            carDetails.put("mileage", car.getMileage());
+////	            carDetails.put("seatingCapacity", car.getSeatingCapacity());
+////	            carDetails.put("color", car.getColor());
+////	            carDetails.put("cost", car.getCost());
+//	            carDetails.put("location", car.getLocation());
+//	            List<String> secureImageUrls = car.getImageUrls().stream()
+//		                .map((String url) -> {  
+//		                    try {
+//		                        String path = url.substring(url.indexOf("/root:/") + 7);
+//		                        return oneDriveService.generateDirectDownloadLink(path);
+//		                    } catch (Exception e) {
+//		                        System.err.println("Error generating secure URL for " + url + ": " + e.getMessage());
+//		                        return null;
+//		                    }
+//		                })
+//		                .filter(Objects::nonNull)
+//		                .collect(Collectors.toList());
+//
+//		            carDetails.put("imageUrls", secureImageUrls);
+//	            
+//	            // Add car details to the reservation map
+//	            reservationMap.put("carDetails", carDetails);
+//	        }
+//	        
+//	        // Add the combined data to the list
+//	        totalReservations.add(reservationMap);
+//	    }
+//	    
+//	    return totalReservations;
+//	}
+
+	
 	public List<Map<String, Object>> getReservationsByUserId(Long userId) {
-	    // Fetch the reservations based on the userId
 	    List<Reservation> reservations = reservationRepository.findByUserId(userId);
-	    
-	    List<Map<String, Object>> totalReservations = new ArrayList<>();
-	    
-	    // Iterate over each reservation to fetch car details and create the result
+	    List<Map<String, Object>> enrichedReservations = new ArrayList<>();
+
 	    for (Reservation reservation : reservations) {
-	        // Create a map to hold the reservation data and associated car details
 	        Map<String, Object> reservationMap = new HashMap<>();
-	        
-	        // Add reservation details
 	        reservationMap.put("reservationId", reservation.getId());
+	        reservationMap.put("carId", reservation.getCarId());
 	        reservationMap.put("userId", reservation.getUserId());
 	        reservationMap.put("fromDate", reservation.getFromDate());
 	        reservationMap.put("toDate", reservation.getToDate());
@@ -81,47 +147,50 @@ public class ReservationService {
 	        reservationMap.put("status", reservation.getStatus());
 	        reservationMap.put("createdAt", reservation.getCreatedAt());
 
-	        // Fetch car details based on carId
-	        CarEntity car = carRepository.findById(reservation.getCarId()).orElse(null);
-	        
-	        if (car != null) {
-	            // Add car details to the map
+	        // Check admin verification status using paymentId
+	        String transactionId = reservation.getPaymentId();
+	        boolean isAdminVerified = transactionUnderVerificationRepository
+	            .findByTransactionId(transactionId)
+	            .map(TransactionUnderVerification::isAdminVerified)
+	            .orElse(false);
+
+	        reservationMap.put("isAdminVerified", isAdminVerified);
+
+	        if (!isAdminVerified) {
+	            reservationMap.put("message", "Your document is under admin verification. Please wait.");
+	            enrichedReservations.add(reservationMap);
+	            continue;
+	        }
+
+	        // Add car details if admin is verified
+	        carRepository.findById(reservation.getCarId()).ifPresent(car -> {
 	            Map<String, Object> carDetails = new HashMap<>();
 	            carDetails.put("carId", car.getId());
 	            carDetails.put("carName", car.getCarName());
 	            carDetails.put("carModel", car.getCarModel());
-//	            carDetails.put("year", car.getYear());
-//	            carDetails.put("fuelType", car.getFuelType());
-//	            carDetails.put("transmission", car.getTransmission());
-//	            carDetails.put("mileage", car.getMileage());
-//	            carDetails.put("seatingCapacity", car.getSeatingCapacity());
-//	            carDetails.put("color", car.getColor());
-//	            carDetails.put("cost", car.getCost());
 	            carDetails.put("location", car.getLocation());
-	            List<String> secureImageUrls = car.getImageUrls().stream()
-		                .map((String url) -> {  
-		                    try {
-		                        String path = url.substring(url.indexOf("/root:/") + 7);
-		                        return oneDriveService.generateDirectDownloadLink(path);
-		                    } catch (Exception e) {
-		                        System.err.println("Error generating secure URL for " + url + ": " + e.getMessage());
-		                        return null;
-		                    }
-		                })
-		                .filter(Objects::nonNull)
-		                .collect(Collectors.toList());
 
-		            carDetails.put("imageUrls", secureImageUrls);
-	            
-	            // Add car details to the reservation map
-	            reservationMap.put("carDetails", carDetails);
-	        }
-	        
-	        // Add the combined data to the list
-	        totalReservations.add(reservationMap);
+	            List<String> secureImageUrls = car.getImageUrls().stream()
+	                .map(url -> {
+	                    try {
+	                        String path = url.substring(url.indexOf("/root:/") + 7);
+	                        return oneDriveService.generateDirectDownloadLink(path);
+	                    } catch (Exception e) {
+	                        System.err.println("Error generating secure URL for " + url + ": " + e.getMessage());
+	                        return null;
+	                    }
+	                })
+	                .filter(Objects::nonNull)
+	                .collect(Collectors.toList());
+
+	            carDetails.put("imageUrls", secureImageUrls);
+	            reservationMap.put("car", carDetails);
+	        });
+
+	        enrichedReservations.add(reservationMap);
 	    }
-	    
-	    return totalReservations;
+
+	    return enrichedReservations;
 	}
 
 
