@@ -19,7 +19,7 @@ import jakarta.annotation.PostConstruct;
 @EntityScan({ "com.sklassics.cars.entities", "com.sklassics.cars.admin.entities", "com.sklassics.cars.admin.controller",
 		"com.sklassics.cars.admin.repositories", "com.sklassics.cars.admin.service", "com.sklassics.cars.controllers",
 		"com.sklassics.cars.dtos", "com.sklassics.cars.exceptions", "com.sklassics.cars.repositories",
-		"com.sklassics.cars.security", "com.sklassics.cars.services", "com.sklassics.cars.utility" })
+		"com.sklassics.cars.security", "com.sklassics.cars.services", "com.sklassics.cars.utility","com.sklassics.cars.customadmin.entities" ,"com.sklassics.cars.customadmin.controller","com.sklassics.cars.customadmin.repositories","com.sklassics.cars.customadmin.service"})
 @ComponentScan("com.sklassics.cars")
 @EnableAsync
 

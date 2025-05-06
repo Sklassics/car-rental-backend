@@ -60,7 +60,7 @@ public class CarRequestDTO {
 	
 	public CarRequestDTO(Long id, String carName, String carModel, int year, String vehicleType, String fuelType,
 			String transmission, double mileage, int seatingCapacity, String color, List<String> imageUrls, Double cost,
-			boolean available, String location) {
+			boolean available) {
 		this.id = id;
 		this.carName = carName;
 		this.carModel = carModel;
@@ -74,7 +74,6 @@ public class CarRequestDTO {
 		this.imageUrls = imageUrls;
 		this.cost = cost;
 		this.available = available;
-		this.location = location;
 		
 	}
 

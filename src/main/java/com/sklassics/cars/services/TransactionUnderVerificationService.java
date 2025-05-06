@@ -35,7 +35,7 @@ public class TransactionUnderVerificationService {
 	@Autowired
 	private OneDriveService oneDriveService;
 
-	public TransactionUnderVerification saveTransaction(Long userId, String mobile, String email, String transactionId,
+	public TransactionUnderVerification saveTransaction(Long userId, String transactionId,
 			Double amount, MultipartFile screenshot,String Action) throws IOException {
 
 		
@@ -46,8 +46,6 @@ public class TransactionUnderVerificationService {
 		
 		TransactionUnderVerification transaction = new TransactionUnderVerification();
 		transaction.setUserId(userId);
-		transaction.setMobile(mobile);
-		transaction.setEmail(email);
 		transaction.setTransactionId(transactionId);
 		transaction.setAmount(amount);
 		transaction.setTransactionScreenshotUrl(imageUrl);
@@ -73,34 +71,94 @@ public class TransactionUnderVerificationService {
 	
 	
 
-	@Transactional
-	public TransactionUnderVerification updateAdminVerification(String transactionId, boolean isVerified) {
-	    TransactionUnderVerification transaction = transactionUnderVerificationRepository.findByTransactionId(transactionId)
-	            .orElseThrow(() -> new RuntimeException("Transaction not found"));
+//	 @Transactional
+//	 public TransactionUnderVerification updateAdminVerification(String transactionId, boolean isVerified) {
+//	     TransactionUnderVerification transaction = transactionUnderVerificationRepository.findByTransactionId(transactionId)
+//	             .orElseThrow(() -> new RuntimeException("Transaction not found"));
+//
+//	     transaction.setAdminVerified(isVerified);
+//	     transactionUnderVerificationRepository.save(transaction);
+//
+//	     String action = transaction.getAction();
+//
+//	     if (isVerified) {
+//	         Long userId = transaction.getUserId();
+//	         String paymentId = transaction.getTransactionId();
+//
+//	         if ("book".equals(action)) {
+//	             Booking booking = bookingRepository.findTopByUserId(userId)
+//	                     .orElseThrow(() -> new RuntimeException("Booking not found for userId: " + userId));
+//
+//	             booking.setPaymentId(paymentId);
+//	             booking.setStatus("paid");
+//	             bookingRepository.save(booking);
+//
+//	         } else if ("reserve".equals(action)) {
+//	             Reservation reservation = reservationRepository.findTopByUserId(userId)
+//	                     .orElseThrow(() -> new RuntimeException("Reservation not found for userId: " + userId));
+//
+//	             reservation.setPaymentId(paymentId);
+//	             reservation.setStatus("paid");
+//	             reservationRepository.save(reservation);
+//	         }
+//	     }
+//
+//	     return transaction;
+//	 }
 
-	    transaction.setAdminVerified(isVerified);
-	    transactionUnderVerificationRepository.save(transaction);
+	 
+	 @Transactional
+	 public TransactionUnderVerification updateAdminVerification(String transactionId, boolean isVerified, Long bookingId) {
+	     System.out.println("Starting verification process for transaction ID: " + transactionId);
 
-	    String action = transaction.getAction();
+	     // 1. Fetch the transaction
+	     TransactionUnderVerification transaction = transactionUnderVerificationRepository
+	             .findByTransactionId(transactionId)
+	             .orElseThrow(() -> new RuntimeException("Transaction with ID " + transactionId + " not found."));
+	     System.out.println("Transaction found: " + transaction);
 
-	    if (isVerified && "book".equals(action)) {
-	        Booking booking = new Booking();
-	        booking.setUserId(transaction.getUserId());
-	        booking.setPaymentId(transaction.getTransactionId());
-	        booking.setStatus("paid");
+	     // 2. Update transaction verification
+	     System.out.println("Updating admin verification status to: " + isVerified);
+	     transaction.setAdminVerified(isVerified);
+	     transactionUnderVerificationRepository.saveAndFlush(transaction);
 
-	        bookingRepository.save(booking);
-	    } else if (isVerified && "reserve".equals(action)) {
-	        Reservation reservation = new Reservation();
-	        reservation.setUserId(transaction.getUserId());
-	        reservation.setPaymentId(transaction.getTransactionId());
-	        reservation.setStatus("paid");
+	     if (isVerified) {
+	         String action = transaction.getAction();
+	         String paymentId = transaction.getTransactionId();
 
-	        reservationRepository.save(reservation);
-	    }
+	         System.out.println("Transaction verified, processing action: " + action);
 
-	    return transaction;
-	}
+	         switch (action.toLowerCase()) {
+	             case "book":
+	                 Booking booking = bookingRepository.findById(bookingId)
+	                         .orElseThrow(() -> new RuntimeException("Booking not found for ID: " + bookingId));
+	                 booking.setPaymentId(paymentId);
+	                 booking.setStatus("paid");
+	                 bookingRepository.saveAndFlush(booking);
+	                 System.out.println("Booking updated successfully.");
+	                 break;
+
+	             case "reserve":
+	                 Reservation reservation = reservationRepository.findById(bookingId)
+	                         .orElseThrow(() -> new RuntimeException("Reservation not found for ID: " + bookingId));
+	                 reservation.setPaymentId(paymentId);
+	                 reservation.setStatus("paid");
+	                 reservationRepository.saveAndFlush(reservation);
+	                 System.out.println("Reservation updated successfully.");
+	                 break;
+
+	             default:
+	                 throw new RuntimeException("Unknown action type: " + action);
+	         }
+	     }
+
+	     System.out.println("Transaction verification completed for transaction ID: " + transactionId);
+	     return transaction;
+	 }
+
+
+
+
 
 
 	

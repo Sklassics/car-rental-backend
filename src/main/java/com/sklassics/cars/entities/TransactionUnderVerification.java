@@ -11,8 +11,7 @@ public class TransactionUnderVerification {
     private Long id;
     
     private Long userId;
-    private String mobile;
-    private String email;
+
     private String transactionId;
     private Double amount;
     private String transactionScreenshotUrl;
@@ -36,18 +35,6 @@ public class TransactionUnderVerification {
 	}
 	public void setUserId(Long userId) {
 		this.userId = userId;
-	}
-	public String getMobile() {
-		return mobile;
-	}
-	public void setMobile(String mobile) {
-		this.mobile = mobile;
-	}
-	public String getEmail() {
-		return email;
-	}
-	public void setEmail(String email) {
-		this.email = email;
 	}
 	public String getTransactionId() {
 		return transactionId;

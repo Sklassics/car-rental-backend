@@ -7,12 +7,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sklassics.cars.entities.User;
 import com.sklassics.cars.repositories.UserRepository;
+import com.sklassics.cars.services.EmailService;
 import com.sklassics.cars.services.JwtService;
 import com.sklassics.cars.services.utility.ResponseUtil;
 
@@ -26,6 +29,9 @@ public class WaitingController {
 	
 	 @Autowired
 	    private UserRepository userRepository;
+	 
+	 @Autowired
+	 private EmailService emailService;
 	 
 	@GetMapping("/adminVerified")
     public ResponseEntity<?> getWaitingProfile(@RequestHeader("Authorization") String authHeader) {
@@ -56,6 +62,23 @@ public class WaitingController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                  .body(ResponseUtil.internalError("Error while fetching user profile"));
+        }
+    }
+	
+	@PostMapping("/subscribe")
+    public ResponseEntity<?> subscribeToNewsletter(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body("Email is required.");
+        }
+
+        try {
+            emailService.sendNewsletterSubscriptionEmail(email);
+            return ResponseEntity.ok("Subscription successful. Confirmation email sent to " + email);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body("Failed to send email: " + e.getMessage());
         }
     }
 }

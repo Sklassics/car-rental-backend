@@ -1,6 +1,7 @@
 package com.sklassics.cars.repositories;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +13,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 	List<Reservation> findByCarIdAndStatus(Long carId, String status);
 	
 	List<Reservation> findByUserId(Long userId);
-
+	
+	
+	Optional<Reservation> findTopByUserId(Long userId);
 
 
 
