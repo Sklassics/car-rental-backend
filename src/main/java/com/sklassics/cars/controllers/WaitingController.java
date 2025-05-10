@@ -1,5 +1,6 @@
 package com.sklassics.cars.controllers;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -17,6 +18,7 @@ import com.sklassics.cars.entities.User;
 import com.sklassics.cars.repositories.UserRepository;
 import com.sklassics.cars.services.EmailService;
 import com.sklassics.cars.services.JwtService;
+import com.sklassics.cars.services.OneDriveService;
 import com.sklassics.cars.services.utility.ResponseUtil;
 
 @RestController
@@ -32,6 +34,9 @@ public class WaitingController {
 	 
 	 @Autowired
 	 private EmailService emailService;
+	 
+		@Autowired
+	    private OneDriveService oneDriveService;
 	 
 	@GetMapping("/adminVerified")
     public ResponseEntity<?> getWaitingProfile(@RequestHeader("Authorization") String authHeader) {
@@ -75,10 +80,21 @@ public class WaitingController {
 
         try {
             emailService.sendNewsletterSubscriptionEmail(email);
-            return ResponseEntity.ok("Subscription successful. Confirmation email sent to " + email);
+            return ResponseEntity.ok("Subscribed to our newsletter!!");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                  .body("Failed to send email: " + e.getMessage());
         }
     }
+	
+	 @GetMapping("/car-homepage")
+	    public ResponseEntity<Map<String, Object>> getCarHomePageImages() {
+	        try {
+	            List<String> imageUrls = oneDriveService.getImageUrlsFromCarHomePageFolder();
+	            return ResponseEntity.ok(ResponseUtil.successWithData("Image URLs fetched successfully", imageUrls));
+	        } catch (Exception e) {
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                    .body(ResponseUtil.internalError("Failed to fetch image URLs"));
+	        }
+	    }
 }

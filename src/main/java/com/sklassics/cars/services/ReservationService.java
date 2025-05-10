@@ -11,15 +11,19 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.sklassics.cars.dtos.ReservationUserDTO;
+import com.sklassics.cars.dtos.ReservationWithDueAmountDTO;
 import com.sklassics.cars.entities.CarEntity;
 import com.sklassics.cars.entities.Reservation;
 import com.sklassics.cars.entities.Transaction;
 import com.sklassics.cars.entities.TransactionUnderVerification;
+import com.sklassics.cars.entities.User;
 import com.sklassics.cars.exceptions.CustomExceptions.CarNotFoundException;
 import com.sklassics.cars.repositories.CarRepository;
 import com.sklassics.cars.repositories.ReservationRepository;
 import com.sklassics.cars.repositories.TransactionRepository;
 import com.sklassics.cars.repositories.TransactionUnderVerificationRepository;
+import com.sklassics.cars.repositories.UserRepository;
 
 @Service
 public class ReservationService {
@@ -38,6 +42,12 @@ public class ReservationService {
 	
 	@Autowired
     private TransactionUnderVerificationRepository transactionUnderVerificationRepository;
+	
+	
+	@Autowired
+    private UserRepository userRepository;
+	
+	
 
 	
 	public Reservation saveReservation(Reservation reservation, Long userId) {
@@ -54,6 +64,7 @@ public class ReservationService {
 	    reservation.setPickupTime(reservation.getPickupTime());
 	    reservation.setDropTime(reservation.getDropTime());
 	    reservation.setPaymentId(reservation.getPaymentId());
+	    reservation.setAgreedToTerms(reservation.isAgreedToTerms());
 	    // Set booking status based on transaction data
         Optional<Transaction> transaction = transactionRepository.findByRazorpayPaymentId(reservation.getPaymentId());
         if (transaction.isPresent()) {
@@ -192,6 +203,48 @@ public class ReservationService {
 
 	    return enrichedReservations;
 	}
+	
+	public List<ReservationWithDueAmountDTO> getReservationsWithDueAmount() {
+	    // Fetch reservations with due amount greater than 0
+	    List<Reservation> reservationsWithDueAmount = reservationRepository.findByDueAmountGreaterThan(0.0);
+
+	    List<ReservationWithDueAmountDTO> reservationDTOs = new ArrayList<>();
+
+	    // Iterate over reservations and fetch user & car details
+	    for (Reservation reservation : reservationsWithDueAmount) {
+	        Optional<User> userOptional = userRepository.findById(reservation.getUserId());
+
+	        if (userOptional.isPresent()) {
+	            User user = userOptional.get();
+
+	            Optional<CarEntity> carOptional = carRepository.findById(reservation.getCarId());
+
+	            if (carOptional.isPresent()) {
+	                CarEntity car = carOptional.get();
+
+	                // Create DTO to combine reservation, user, and car details
+	                ReservationWithDueAmountDTO dto = new ReservationWithDueAmountDTO();
+	                dto.setUserId(user.getId());
+	                dto.setUserName(user.getFullName());
+	                dto.setEmail(user.getEmail());
+	                dto.setMobile(user.getMobile());
+	                dto.setDueAmount(reservation.getDueAmount());
+	                dto.setTotalAmount(reservation.getTotalAmount());
+	                dto.setReservationId(reservation.getId());
+	                dto.setFromDate(reservation.getFromDate());
+	                dto.setToDate(reservation.getToDate());
+	                dto.setStatus(reservation.getStatus());
+	                dto.setPaymentId(reservation.getPaymentId());
+
+	              
+	                reservationDTOs.add(dto);
+	            }
+	        }
+	    }
+
+	    return reservationDTOs;
+	}
+
 
 
 	public Optional<Reservation> getReservationById(Long id) {
@@ -200,10 +253,36 @@ public class ReservationService {
 
 	
 
-    public List<Reservation> getAllReservations() {
-        return reservationRepository.findAll();
-    }
+	public List<ReservationUserDTO> getAllReservations() {
+	    List<Reservation> reservations = reservationRepository.findAll();
 
+	    return reservations.stream().map(reservation -> {
+	        User user = userRepository.findById(reservation.getUserId()).orElse(null);
+
+	        ReservationUserDTO dto = new ReservationUserDTO();
+	        
+	        // Set reservation details
+	        dto.setReservationId(reservation.getId());
+	        dto.setCarId(reservation.getCarId());
+	        dto.setFromDate(reservation.getFromDate());
+	        dto.setToDate(reservation.getToDate());
+	        dto.setPickupTime(reservation.getPickupTime());
+	        dto.setDropTime(reservation.getDropTime());
+	        dto.setStatus(reservation.getStatus());
+	        dto.setTotalAmount(reservation.getTotalAmount());
+	        dto.setDueAmount(reservation.getDueAmount());
+
+	        // Set user details (check for null to avoid NPE)
+	        if (user != null) {
+	            dto.setUserId(user.getId());
+	            dto.setFullName(user.getFullName());
+	            dto.setEmail(user.getEmail());
+	            dto.setMobile(user.getMobile());
+	        }
+
+	        return dto;
+	    }).toList();
+	}
 
 
 

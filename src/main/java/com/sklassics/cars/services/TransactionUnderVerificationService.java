@@ -1,6 +1,7 @@
 package com.sklassics.cars.services;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,7 +37,7 @@ public class TransactionUnderVerificationService {
 	private OneDriveService oneDriveService;
 
 	public TransactionUnderVerification saveTransaction(Long userId, String transactionId,
-			Double amount, MultipartFile screenshot,String Action) throws IOException {
+			Double amount, MultipartFile screenshot,String Action, Long actionId,Double payableCarCost, String mobileNumber) throws IOException {
 
 		
 		String imageUrl = saveFileToOneDrive(screenshot, "transactions_screenshots");
@@ -50,7 +51,11 @@ public class TransactionUnderVerificationService {
 		transaction.setAmount(amount);
 		transaction.setTransactionScreenshotUrl(imageUrl);
 		transaction.setAction(Action);
+		transaction.setActionId(actionId);
 		transaction.setAdminVerified(false);
+		transaction.setPayableCarCost(payableCarCost);
+		transaction.setMobileNumber(mobileNumber);
+		
 
 		return transactionUnderVerificationRepository.save(transaction);
 	}
@@ -108,7 +113,7 @@ public class TransactionUnderVerificationService {
 
 	 
 	 @Transactional
-	 public TransactionUnderVerification updateAdminVerification(String transactionId, boolean isVerified, Long bookingId) {
+	 public TransactionUnderVerification updateAdminVerification(String transactionId, boolean isVerified,Long actionId,Double dueAmount,Double totalPayableAmount) {
 	     System.out.println("Starting verification process for transaction ID: " + transactionId);
 
 	     // 1. Fetch the transaction
@@ -117,32 +122,40 @@ public class TransactionUnderVerificationService {
 	             .orElseThrow(() -> new RuntimeException("Transaction with ID " + transactionId + " not found."));
 	     System.out.println("Transaction found: " + transaction);
 
-	     // 2. Update transaction verification
+	     // 2. Update admin verification
 	     System.out.println("Updating admin verification status to: " + isVerified);
 	     transaction.setAdminVerified(isVerified);
+	     transaction.setTransactionId(transactionId);
 	     transactionUnderVerificationRepository.saveAndFlush(transaction);
 
 	     if (isVerified) {
 	         String action = transaction.getAction();
 	         String paymentId = transaction.getTransactionId();
+	         
 
-	         System.out.println("Transaction verified, processing action: " + action);
+	         System.out.println("Transaction verified, processing action: " + action + ", Action ID: " + actionId);
 
 	         switch (action.toLowerCase()) {
 	             case "book":
-	                 Booking booking = bookingRepository.findById(bookingId)
-	                         .orElseThrow(() -> new RuntimeException("Booking not found for ID: " + bookingId));
+	                 Booking booking = bookingRepository.findById(actionId)
+	                         .orElseThrow(() -> new RuntimeException("Booking not found for ID: " + actionId));
 	                 booking.setPaymentId(paymentId);
 	                 booking.setStatus("paid");
+	                 booking.setTotalAmount(totalPayableAmount);
+	                 booking.setDueAmount(dueAmount);
+	                 booking.setAdminApprovedAt(LocalDateTime.now());
 	                 bookingRepository.saveAndFlush(booking);
 	                 System.out.println("Booking updated successfully.");
 	                 break;
 
 	             case "reserve":
-	                 Reservation reservation = reservationRepository.findById(bookingId)
-	                         .orElseThrow(() -> new RuntimeException("Reservation not found for ID: " + bookingId));
+	                 Reservation reservation = reservationRepository.findById(actionId)
+	                         .orElseThrow(() -> new RuntimeException("Reservation not found for ID: " + actionId));
 	                 reservation.setPaymentId(paymentId);
 	                 reservation.setStatus("paid");
+	                 reservation.setTotalAmount(totalPayableAmount);
+	                 reservation.setDueAmount(dueAmount);
+	                 reservation.setAdminApprovedAt(LocalDateTime.now());
 	                 reservationRepository.saveAndFlush(reservation);
 	                 System.out.println("Reservation updated successfully.");
 	                 break;
@@ -152,7 +165,6 @@ public class TransactionUnderVerificationService {
 	         }
 	     }
 
-	     System.out.println("Transaction verification completed for transaction ID: " + transactionId);
 	     return transaction;
 	 }
 

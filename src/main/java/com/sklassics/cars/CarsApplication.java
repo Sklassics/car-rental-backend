@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
@@ -22,15 +23,16 @@ import jakarta.annotation.PostConstruct;
 		"com.sklassics.cars.security", "com.sklassics.cars.services", "com.sklassics.cars.utility","com.sklassics.cars.customadmin.entities" ,"com.sklassics.cars.customadmin.controller","com.sklassics.cars.customadmin.repositories","com.sklassics.cars.customadmin.service"})
 @ComponentScan("com.sklassics.cars")
 @EnableAsync
+@EnableScheduling
 
 public class CarsApplication {
 
 	private static final Logger logger = LoggerFactory.getLogger(CarsApplication.class);
 
 	public static void main(String[] args) {
-//		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-//
-//		dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+		Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+
+		dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
 
 		// Optionally print the default timezone
 		System.out.println("Default Timezone: " + TimeZone.getDefault().getID());

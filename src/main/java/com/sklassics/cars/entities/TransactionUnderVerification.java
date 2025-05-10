@@ -19,7 +19,14 @@ public class TransactionUnderVerification {
     
     private String action;
     
+    private Long actionId;
     
+    private Double payableCarCost;
+    
+   private String mobileNumber;
+    
+   private Double dueAmount;
+   
 	public Long getId() {
 		return id;
 	}
@@ -30,6 +37,18 @@ public class TransactionUnderVerification {
 	
 	
 	
+	public String getMobileNumber() {
+		return mobileNumber;
+	}
+	public void setMobileNumber(String mobileNumber) {
+		this.mobileNumber = mobileNumber;
+	}
+	public Double getPayableCarCost() {
+		return payableCarCost;
+	}
+	public void setPayableCarCost(Double payableCarCost) {
+		this.payableCarCost = payableCarCost;
+	}
 	public Long getUserId() {
 		return userId;
 	}
@@ -52,6 +71,12 @@ public class TransactionUnderVerification {
 	
 	
 	
+	public Long getActionId() {
+		return actionId;
+	}
+	public void setActionId(Long actionId) {
+		this.actionId = actionId;
+	}
 	public String getAction() {
 		return action;
 	}
@@ -69,6 +94,12 @@ public class TransactionUnderVerification {
 	}
 	public void setAdminVerified(boolean isAdminVerified) {
 		this.isAdminVerified = isAdminVerified;
+	}
+	public Double getDueAmount() {
+		return dueAmount;
+	}
+	public void setDueAmount(Double dueAmount) {
+		this.dueAmount = dueAmount;
 	}
 
     

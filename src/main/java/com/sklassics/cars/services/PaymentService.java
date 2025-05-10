@@ -45,80 +45,6 @@ public class PaymentService {
     }
     
     
-    public PaymentResponse calculateCost(PaymentRequest paymentRequest) {
-
-        System.out.println("Received PaymentRequest: " + paymentRequest);
-
-        long carId = paymentRequest.getCarId();
-        System.out.println("Extracted carId: " + carId);
-
-        CarEntity car = carRepository.findById(carId)
-            .orElseThrow(() -> {
-                System.out.println("Car not found with ID: " + carId);
-                return new CarNotFoundException("Car not found");
-            });
-
-        System.out.println("Fetched CarEntity: " + car);
-
-        Double costPerDay = car.getCost();
-        System.out.println("Cost per day: " + costPerDay);
-
-        LocalDate fromDate = paymentRequest.getFromDate();
-        LocalDate toDate = paymentRequest.getToDate();
-        System.out.println("From Date: " + fromDate + ", To Date: " + toDate);
-
-        LocalTime pickupTime = paymentRequest.getPickupTime();
-        LocalTime returnTime = paymentRequest.getReturnTime();
-        System.out.println("Pickup Time: " + pickupTime + ", Return Time: " + returnTime);
-
-        long duration = ChronoUnit.DAYS.between(fromDate, toDate) + 1;
-        System.out.println("Calculated duration: " + duration);
-
-        // Handle same day rentals
-        if (duration == 0) {
-            duration = 1;
-            System.out.println("Same-day rental. Setting duration to 1 day.");
-        }
-
-        System.out.println("Rental duration in days: " + duration);
-
-        double carPrice = roundToTwoDecimals(duration * costPerDay); 
-        double discount = 0.0;
-
-        if (duration >= 10) {
-            discount = roundToTwoDecimals(carPrice * 0.20);
-            System.out.println("Applied 20% discount: -" + discount);
-        } else if (duration >= 5) {
-            discount = roundToTwoDecimals(carPrice * 0.15);
-            System.out.println("Applied 15% discount: -" + discount);
-        }
-
-        
-        double cleaningFee = 199.0;
-
-        double extraCost = 0.0;
-        if (pickupTime != null && returnTime != null) {
-            long extraHours = returnTime.getHour() - pickupTime.getHour();
-            double hourlyRate = costPerDay / 24.0;
-            extraCost = roundToTwoDecimals(extraHours * hourlyRate);
-            System.out.println("Extra hours: " + extraHours + ", Extra cost: " + extraCost);
-        }
-
-        double totalCost = roundToTwoDecimals(carPrice - discount + cleaningFee + extraCost);
-        System.out.println("Total rental cost after all additions: " + totalCost);
-
-        PaymentResponse response = new PaymentResponse();
-        response.setRentalCost(totalCost);
-        response.setDuration(duration);
-        response.setDurationText(duration == 1 ? "1 day" : duration + " days");
-
-        response.setCarPrice(carPrice);
-        response.setDiscount(discount);
-        response.setCleaningFee(cleaningFee);
-
-        return response;
-    }
-
 //    public PaymentResponse calculateCost(PaymentRequest paymentRequest) {
 //
 //        System.out.println("Received PaymentRequest: " + paymentRequest);
@@ -148,49 +74,37 @@ public class PaymentService {
 //        long duration = ChronoUnit.DAYS.between(fromDate, toDate) + 1;
 //        System.out.println("Calculated duration: " + duration);
 //
-//        double carPrice;
-//        double discount = 0.0;
-//        double insuranceCost = 0.0; // Flat or per-day logic can be added
-//        double cleaningFee = 199.0;
-//        double extraCost = 0.0;
-//
-//        if (fromDate.equals(toDate)) {
-//            // Use quadrant-based pricing instead of full-day
-//            if (pickupTime != null && returnTime != null) {
-//                int pickupQuadrant = getQuadrant(pickupTime);
-//                int returnQuadrant = getQuadrant(returnTime);
-//                int quadrantSpan = returnQuadrant - pickupQuadrant;
-//
-//                if (quadrantSpan < 0) {
-//                    quadrantSpan += 4; // handle wrap-around
-//                }
-//
-//                quadrantSpan = quadrantSpan == 0 ? 1 : quadrantSpan;
-//                double quadrantRate = costPerDay / 4.0;
-//                carPrice = roundToTwoDecimals(quadrantSpan * quadrantRate);
-//
-//                System.out.println("Same-day booking. Quadrant span: " + quadrantSpan + ", Car price: " + carPrice);
-//            } else {
-//                // If time not provided, default to full-day charge
-//                carPrice = roundToTwoDecimals(costPerDay);
-//                System.out.println("Same-day booking without time. Charging full day: " + carPrice);
-//            }
-//
-//            duration = 1; // Always set to 1 for same-day rentals
-//        } else {
-//            // Multi-day rental
-//            carPrice = roundToTwoDecimals(duration * costPerDay);
-//
-//            if (duration >= 10) {
-//                discount = roundToTwoDecimals(carPrice * 0.20);
-//                System.out.println("Applied 20% discount: -" + discount);
-//            } else if (duration >= 5) {
-//                discount = roundToTwoDecimals(carPrice * 0.15);
-//                System.out.println("Applied 15% discount: -" + discount);
-//            }
+//        // Handle same day rentals
+//        if (duration == 0) {
+//            duration = 1;
+//            System.out.println("Same-day rental. Setting duration to 1 day.");
 //        }
 //
-//        double totalCost = roundToTwoDecimals(carPrice - discount + insuranceCost + cleaningFee + extraCost);
+//        System.out.println("Rental duration in days: " + duration);
+//
+//        double carPrice = roundToTwoDecimals(duration * costPerDay); 
+//        double discount = 0.0;
+//
+//        if (duration >= 10) {
+//            discount = roundToTwoDecimals(carPrice * 0.20);
+//            System.out.println("Applied 20% discount: -" + discount);
+//        } else if (duration >= 5) {
+//            discount = roundToTwoDecimals(carPrice * 0.15);
+//            System.out.println("Applied 15% discount: -" + discount);
+//        }
+//
+//        
+//        double cleaningFee = 199.0;
+//
+//        double extraCost = 0.0;
+//        if (pickupTime != null && returnTime != null) {
+//            long extraHours = returnTime.getHour() - pickupTime.getHour();
+//            double hourlyRate = costPerDay / 24.0;
+//            extraCost = roundToTwoDecimals(extraHours * hourlyRate);
+//            System.out.println("Extra hours: " + extraHours + ", Extra cost: " + extraCost);
+//        }
+//
+//        double totalCost = roundToTwoDecimals(carPrice - discount + cleaningFee + extraCost);
 //        System.out.println("Total rental cost after all additions: " + totalCost);
 //
 //        PaymentResponse response = new PaymentResponse();
@@ -200,19 +114,68 @@ public class PaymentService {
 //
 //        response.setCarPrice(carPrice);
 //        response.setDiscount(discount);
-//        response.setInsuranceCost(insuranceCost);
 //        response.setCleaningFee(cleaningFee);
 //
 //        return response;
 //    }
 
-    private int getQuadrant(LocalTime time) {
-        int hour = time.getHour();
-        if (hour < 6) return 1;
-        else if (hour < 12) return 2;
-        else if (hour < 18) return 3;
-        else return 4;
+    public PaymentResponse calculateCost(PaymentRequest paymentRequest) {
+
+        System.out.println("Received PaymentRequest: " + paymentRequest);
+
+        long carId = paymentRequest.getCarId();
+        CarEntity car = carRepository.findById(carId)
+            .orElseThrow(() -> {
+                System.out.println("Car not found with ID: " + carId);
+                return new CarNotFoundException("Car not found");
+            });
+
+        Double costPerDay = car.getCost();
+        LocalDate fromDate = paymentRequest.getFromDate();
+        LocalDate toDate = paymentRequest.getToDate();
+        LocalTime pickupTime = paymentRequest.getPickupTime();
+        LocalTime returnTime = paymentRequest.getReturnTime();
+
+        System.out.println("Car Rate/Day: " + costPerDay);
+        System.out.println("From: " + fromDate + " " + pickupTime + " | To: " + toDate + " " + returnTime);
+
+        // Combine Date + Time into full DateTime
+        LocalDateTime startDateTime = LocalDateTime.of(fromDate, pickupTime);
+        LocalDateTime endDateTime = LocalDateTime.of(toDate, returnTime);
+
+        // Calculate total rental hours
+        long totalHours = Duration.between(startDateTime, endDateTime).toHours();
+        System.out.println("Total rental hours: " + totalHours);
+
+        // Convert hours into quadrant blocks (6 hrs per quadrant)
+        int quadrants = (int) Math.ceil(totalHours / 6.0);
+        double quadrantRate = costPerDay / 4.0;
+        double carPrice = roundToTwoDecimals(quadrants * quadrantRate);
+        System.out.println("Quadrants: " + quadrants + ", Quadrant Rate: " + quadrantRate + ", Car Price: " + carPrice);
+
+        // Apply discount based on hours (converted to full days for discount purpose only)
+        double discount = 0.0;
+        double daysEquivalent = totalHours / 24.0;
+        if (daysEquivalent >= 10) {
+            discount = roundToTwoDecimals(carPrice * 0.20);
+        } else if (daysEquivalent >= 5) {
+            discount = roundToTwoDecimals(carPrice * 0.15);
+        }
+
+        double cleaningFee = 199.0;
+        double totalCost = roundToTwoDecimals(carPrice - discount + cleaningFee);
+
+        PaymentResponse response = new PaymentResponse();
+        response.setRentalCost(totalCost);
+        response.setDurationText(totalHours + " hours (" + quadrants + " quadrants)");
+        response.setDuration(quadrants);
+        response.setCarPrice(carPrice);
+        response.setCleaningFee(cleaningFee);
+
+        return response;
     }
+
+
 
     private double roundToTwoDecimals(double value) {
         return Math.round(value * 100.0) / 100.0;

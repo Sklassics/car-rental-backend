@@ -11,6 +11,10 @@ public class UserDTO {
     private String licenseFilePath;
     private String location;
     private LocalDate submittedAt;
+    
+    private String selfieFilePath;
+    
+    
 	public String getEmail() {
 		return email;
 	}
@@ -58,6 +62,12 @@ public class UserDTO {
 	}
 	public void setSubmittedAt(LocalDate submittedAt) {
 		this.submittedAt = submittedAt;
+	}
+	public String getSelfieFilePath() {
+		return selfieFilePath;
+	}
+	public void setSelfieFilePath(String selfieFilePath) {
+		this.selfieFilePath = selfieFilePath;
 	}
 
     // Getters and setters

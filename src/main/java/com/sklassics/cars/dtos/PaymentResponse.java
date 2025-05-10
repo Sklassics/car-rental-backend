@@ -7,8 +7,7 @@ public class PaymentResponse {
     private String durationText;
     
     private double carPrice;           
-    private double discount;          
-    private double insuranceCost;     
+    private double discount;              
     private double cleaningFee;
 
     public double getRentalCost() {
@@ -51,13 +50,6 @@ public class PaymentResponse {
 		this.discount = discount;
 	}
 
-	public double getInsuranceCost() {
-		return insuranceCost;
-	}
-
-	public void setInsuranceCost(double insuranceCost) {
-		this.insuranceCost = insuranceCost;
-	}
 
 	public double getCleaningFee() {
 		return cleaningFee;

@@ -81,7 +81,8 @@ public class AdminDashboardController {
                 // Convert Aadhaar and License files to Base64
                 dto.setAadhaarFilePath(oneDriveService.convertFileToBase64(user.getAadhaarFilePath()));
                 dto.setLicenseFilePath(oneDriveService.convertFileToBase64(user.getLicenseFilePath()));
-
+                dto.setSelfieFilePath(oneDriveService.convertFileToBase64(user.getSelfieImage()));
+                
                 dto.setLocation(user.getAddress());
                 dto.setSubmittedAt(user.getSubmittedAt());
                 return dto;

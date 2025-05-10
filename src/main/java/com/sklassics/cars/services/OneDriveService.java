@@ -115,7 +115,10 @@
 	import com.microsoft.graph.models.Permission;
 	import com.microsoft.graph.requests.GraphServiceClient;
 	import okhttp3.Request;
-	import java.util.*;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 	import java.util.Base64;
 	import org.springframework.util.LinkedMultiValueMap;
 	import org.springframework.util.MultiValueMap;
@@ -132,7 +135,8 @@
 	
 	    @Value("${onedrive.tenant-id}")
 	    private String tenantId;
-	
+	    
+	    
 	    private final String userEmail = "revanthGundabattina@Sklassicstechnologiesprivat.onmicrosoft.com";
 	
 	    private final String[] allowedExtensions = {".jpg", ".jpeg", ".png",".pdf"};
@@ -311,7 +315,7 @@
 	        // Convert MultipartFile to byte array
 	        byte[] fileBytes = file.getBytes();
 	        String fileName = System.currentTimeMillis() + fileExtension; // Generate unique file name
-	        String uploadPath = String.format("%s/%s", licenseFolderPath, fileName); // Set file path
+	        String uploadPath = String.format("%s/%s", licenseFolderPath, fileName); 
 	
 	        // Upload file to OneDrive
 	        graphClient.users(userEmail)
@@ -510,6 +514,62 @@
 	            return "Error converting file to Base64";  // Return an error string or handle accordingly
 	        }
 	    }
+	    
+	 
+
+
+
+	    public List<String> listFilesInUserDriveFolder(String folderPath) throws Exception {
+	        String accessToken = getAccessToken();
+
+	        // Construct URL for user OneDrive (not SharePoint)
+	        String url = String.format("https://graph.microsoft.com/v1.0/users/%s/drive/root:%s:/children", userEmail, folderPath);
+
+	        HttpHeaders headers = new HttpHeaders();
+	        headers.setBearerAuth(accessToken);
+	        headers.setContentType(MediaType.APPLICATION_JSON);
+
+	        HttpEntity<Void> request = new HttpEntity<>(headers);
+	        RestTemplate restTemplate = new RestTemplate();
+	        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, request, Map.class);
+
+	        if (response.getStatusCode() != HttpStatus.OK) {
+	            throw new RuntimeException("Failed to fetch files from folder: " + folderPath);
+	        }
+
+	        List<String> filePaths = new ArrayList<>();
+	        Map<String, Object> responseBody = response.getBody();
+	        List<Map<String, Object>> items = (List<Map<String, Object>>) responseBody.get("value");
+
+	        for (Map<String, Object> item : items) {
+	            if (item.containsKey("file")) {
+	                String fileName = (String) item.get("name");
+	                String fullPath = folderPath + "/" + fileName;
+	                filePaths.add(fullPath);
+	            }
+	        }
+
+	        return filePaths;
+	    }
+
+	    
+	    
+	    public List<String> getImageUrlsFromCarHomePageFolder() throws Exception {
+	        String folderPath = "/Car_home_images"; // Path in user's OneDrive
+
+	        // Fetch file paths
+	        List<String> filePaths = listFilesInUserDriveFolder(folderPath);
+
+	        // Generate direct download URLs
+	        List<String> secureUrls = new ArrayList<>();
+	        for (String filePath : filePaths) {
+	            String secureUrl = generateDirectDownloadLink(filePath);
+	            secureUrls.add(secureUrl);
+	        }
+	        return secureUrls;
+	    }
+
+	    
 
 	
 	

@@ -30,6 +30,12 @@ public class Booking {
 	private boolean agreedToTerms;
 
 	private LocalDateTime createdAt;
+	
+	private Double totalAmount;
+	
+	private Double dueAmount;
+	
+	private LocalDateTime adminApprovedAt;
 
 	@PrePersist
 	protected void onCreate() {
@@ -127,4 +133,29 @@ public class Booking {
 		this.agreedToTerms = agreedToTerms;
 	}
 
+	public Double getTotalAmount() {
+		return totalAmount;
+	}
+
+	public void setTotalAmount(Double totalAmount) {
+		this.totalAmount = totalAmount;
+	}
+
+	public Double getDueAmount() {
+		return dueAmount;
+	}
+
+	public void setDueAmount(Double dueAmount) {
+		this.dueAmount = dueAmount;
+	}
+
+	public LocalDateTime getAdminApprovedAt() {
+		return adminApprovedAt;
+	}
+
+	public void setAdminApprovedAt(LocalDateTime adminApprovedAt) {
+		this.adminApprovedAt = adminApprovedAt;
+	}
+	
+	
 }

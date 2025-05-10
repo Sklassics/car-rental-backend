@@ -18,5 +18,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     
     @Query("SELECT b FROM Booking b WHERE b.carId = :carId AND b.status = 'paid'")
     List<Booking> findPaidBookingsByCarId(Long carId);
+    
+    List<Booking> findByDueAmountGreaterThan(Double dueAmount);
 
 }

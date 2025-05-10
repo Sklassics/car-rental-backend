@@ -20,6 +20,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.type.TypeReference;
+
 
 
 @Service
@@ -30,9 +32,13 @@ public class CarService {
     
     @Autowired
     private OneDriveService oneDriveService;
+    
+    @Autowired
+    private EmailService emailService;
+
 
     
-    public CarEntity saveCar(CarRequestDTO carRequest, List<MultipartFile> images, MultipartFile agreement) throws Exception {
+    public CarEntity saveCar(CarRequestDTO carRequest, List<MultipartFile> images) throws Exception {
         try {
             // Log message for image upload
             if (images != null && !images.isEmpty()) {
@@ -75,24 +81,25 @@ public class CarService {
                 imageUrls = oneDriveService.uploadCarImages(folderName, images);
             }
 
-            // Save the agreement if provided
-            String agreementUrl = null;
-            if (agreement != null) {
-                // Assuming you have a method in your oneDriveService to upload a file
-            	String folderName = car.getFirstName() + "_" + car.getLastName() + "_" + car.getId();
-                agreementUrl = oneDriveService.uploadAgreement(folderName, agreement);
-            }
 
             // Log image URLs for debugging
             System.out.println("Image URLs: " + imageUrls);
-            System.out.println("Agreement URL: " + agreementUrl);
+           
 
             // Update car entity with image URLs and agreement URL
             car.setImageUrls(imageUrls);
-            car.setAgreementPdfLink(agreementUrl); // Assuming 'setAgreementUrl' is a method in CarEntity
 
+            
+            
+            String subject = "Car Successfully Attached with Hanuman Cars!";
+            String message = "Dear " + car.getFirstName() + ",\n\n" +
+                    "Your car \"" + car.getCarName() + " - " + car.getCarModel() + "\" has been successfully listed in our system." +
+                    "\n\nThank you for registering with us!\n\nTeam Svara";
+
+            emailService.sendEmail(car.getEmail(), subject, message);
             // Save the updated car entity with images and agreement
             return carRepository.save(car);
+
 
         } catch (IllegalArgumentException e) {
             throw new Exception("Validation error: " + e.getMessage());
@@ -250,32 +257,32 @@ public class CarService {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
-                CarRequestDTO dto = new CarRequestDTO(
-                    car.getId(),
-                    car.getCarName(),
-                    car.getCarModel(),
-                    car.getYear(),
-                    car.getVehicleType(),
-                    car.getFuelType(),
-                    car.getTransmission(),
-                    car.getMileage(),
-                    car.getSeatingCapacity(),
-                    car.getColor(),
-                    secureLinks,
-                    car.getCost(),
-                    car.isAvailable()
-                );
-
-                // Convert to Map while ignoring nulls
-                return mapper.convertValue(dto, Map.class);
-
-            } catch (Exception e) {
-                System.err.println("Error handling car ID " + car.getId() + ": " + e.getMessage());
-                e.printStackTrace();
-                return null;
-            }
-        }).filter(Objects::nonNull)
-          .collect(Collectors.toList());
+                    CarRequestDTO dto = new CarRequestDTO(
+                        car.getId(),
+                        car.getCarName(),
+                        car.getCarModel(),
+                        car.getYear(),
+                        car.getVehicleType(),
+                        car.getFuelType(),
+                        car.getTransmission(),
+                        car.getMileage(),
+                        car.getSeatingCapacity(),
+                        car.getColor(),
+                        secureLinks,
+                        car.getCost(),
+                        car.isAvailable()
+                    );
+            
+                    return mapper.convertValue(dto, new TypeReference<Map<String, Object>>() {});
+            
+                } catch (Exception e) {
+                    System.err.println("Error handling car ID " + car.getId() + ": " + e.getMessage());
+                    e.printStackTrace();
+                    return null;
+                }
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
     }
 
 

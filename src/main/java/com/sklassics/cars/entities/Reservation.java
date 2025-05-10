@@ -28,6 +28,14 @@ public class Reservation {
 
     private LocalDateTime createdAt;
     
+    private boolean agreedToTerms;
+    
+	private Double totalAmount;
+	
+	private Double dueAmount;
+	
+	private LocalDateTime adminApprovedAt;
+    
  
 
     @PrePersist
@@ -118,6 +126,39 @@ public class Reservation {
 		this.userId = userId;
 	}
 
+	public boolean isAgreedToTerms() {
+		return agreedToTerms;
+	}
+
+	public void setAgreedToTerms(boolean agreedToTerms) {
+		this.agreedToTerms = agreedToTerms;
+	}
+
+	public Double getTotalAmount() {
+		return totalAmount;
+	}
+
+	public void setTotalAmount(Double totalAmount) {
+		this.totalAmount = totalAmount;
+	}
+
+	public Double getDueAmount() {
+		return dueAmount;
+	}
+
+	public void setDueAmount(Double dueAmount) {
+		this.dueAmount = dueAmount;
+	}
+
+	public LocalDateTime getAdminApprovedAt() {
+		return adminApprovedAt;
+	}
+
+	public void setAdminApprovedAt(LocalDateTime adminApprovedAt) {
+		this.adminApprovedAt = adminApprovedAt;
+	}
+
+	
 	
     
 }

@@ -41,7 +41,6 @@ public class VehicleManagement {
     		
             @RequestPart("car") String carJson,
             @RequestPart(value = "images") List<MultipartFile> images,
-            @RequestPart(value ="agreement") MultipartFile agreement,
             @RequestHeader(value = "Authorization",required = false) String authorizationHeader) {
     	
   
@@ -86,7 +85,7 @@ public class VehicleManagement {
             ObjectMapper objectMapper = new ObjectMapper();
             CarRequestDTO carRequest = objectMapper.readValue(carJson, CarRequestDTO.class);
 
-            CarEntity savedCar = carService.saveCar(carRequest, images,agreement);
+            CarEntity savedCar = carService.saveCar(carRequest, images);
             if (savedCar == null) {
                 return ResponseEntity.internalServerError()
                         .body(ResponseUtil.internalError("Car could not be saved"));

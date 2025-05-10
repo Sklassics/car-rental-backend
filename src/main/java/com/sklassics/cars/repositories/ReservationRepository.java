@@ -21,6 +21,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
 	@Query("SELECT r FROM Reservation r WHERE r.carId = :carId AND r.status NOT IN ('cancelled', 'refunded')")
 	List<Reservation> findActiveReservationsByCarId(Long carId);
+	
+	 List<Reservation> findByDueAmountGreaterThan(Double dueAmount);
 
 }
 

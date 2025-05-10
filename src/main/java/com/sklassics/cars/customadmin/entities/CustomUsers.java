@@ -1,4 +1,4 @@
-package com.sklassics.cars.entities;
+package com.sklassics.cars.customadmin.entities;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -13,8 +13,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "users")
-public class User {
+@Table(name = "custom-users")
+public class CustomUsers {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -33,8 +33,6 @@ public class User {
 	private LocalDate submittedAt;
 
 	private LocalDate updatedAt;
-
-	private boolean isCustomAdminUser;
 
 
 	public Long getId() {
@@ -135,14 +133,6 @@ public class User {
 		this.selfieImage = selfieImage;
 	}
 
-	public boolean isCustomAdminUser() {
-		return isCustomAdminUser;
-	}
 
-	public void setCustomAdminUser(boolean isCustomAdminUser) {
-		this.isCustomAdminUser = isCustomAdminUser;
-	}
-
-	
 	
 }

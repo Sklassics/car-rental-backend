@@ -123,6 +123,7 @@ public class UserManagement {
             @RequestParam("address") String address,
             @RequestParam("aadhaarNumber") String aadharNumber,
             @RequestParam("aadhaarFile") MultipartFile aadharFile,
+            @RequestParam("selfieImage") MultipartFile selfieFile,
             @RequestParam("drivingLicenseFile") MultipartFile drivingLicenseFile
     ) {
         try {
@@ -151,7 +152,7 @@ public class UserManagement {
             System.out.println("Extracted user ID from token: " + userId);
 
             // Registration process
-            otpService.registerUser(name, address, aadharNumber, aadharFile, drivingLicenseFile,userId);
+            otpService.registerUser(name, address, aadharNumber, aadharFile, drivingLicenseFile,userId, selfieFile);
             return ResponseEntity.ok(ResponseUtil.successMessage("Profile submitted for Verification!"));
 
         }
@@ -223,6 +224,7 @@ public class UserManagement {
                 "aadhaarNumber", user.getAadhaarNumber(),
                 "aadhaarFilePath", oneDriveService.convertFileToBase64(user.getAadhaarFilePath()),
                 "licenseFilePath", oneDriveService.convertFileToBase64(user.getLicenseFilePath()),
+                "selfiePath",oneDriveService.convertFileToBase64(user.getSelfieImage()),
                 "submittedAt", user.getSubmittedAt(),
                 "status", user.getIsAdminVerifiedDocuments()
             );
