@@ -44,6 +44,9 @@ public class OtpService {
 
 	@Autowired
 	private JavaMailSender javaMailSender;
+	
+	  @Autowired
+	    private CustomAdminRepository customAdminRepository;
 
 	@Autowired
 	private CustomAdminRepository customAdminRepository;
@@ -164,12 +167,20 @@ public class OtpService {
 		return adminRepository.findByMobileNumber(mobile).map(Admin::getId)
 				.orElseThrow(() -> new UserNotFoundException("User not found with mobile: " + mobile));
 	}
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
 	public Long getCustomAdminByMobile(String mobile) {
 		return customAdminRepository.findByMobileNumber(mobile).map(CustomAdmin::getId)
 				.orElseThrow(() -> new UserNotFoundException("User not found with mobile: " + mobile));
 	}
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
 //	public ResponseEntity<?> sendMobileEmailOtp(String mobile, String email) {
 //	// Check if the mobile number already exists in the database
 //	boolean isMobileExists = userRepository.existsByMobile(mobile); 

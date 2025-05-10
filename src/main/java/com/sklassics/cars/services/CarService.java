@@ -257,6 +257,7 @@ public class CarService {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
+<<<<<<< HEAD
                     CarRequestDTO dto = new CarRequestDTO(
                         car.getId(),
                         car.getCarName(),
@@ -283,6 +284,34 @@ public class CarService {
             })
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
+=======
+                CarRequestDTO dto = new CarRequestDTO(
+                    car.getId(),
+                    car.getCarName(),
+                    car.getCarModel(),
+                    car.getYear(),
+                    car.getVehicleType(),
+                    car.getFuelType(),
+                    car.getTransmission(),
+                    car.getMileage(),
+                    car.getSeatingCapacity(),
+                    car.getColor(),
+                    secureLinks,
+                    car.getCost(),
+                    car.isAvailable()
+                );
+
+                // Convert to Map while ignoring nulls
+                return mapper.convertValue(dto, Map.class);
+
+            } catch (Exception e) {
+                System.err.println("Error handling car ID " + car.getId() + ": " + e.getMessage());
+                e.printStackTrace();
+                return null;
+            }
+        }).filter(Objects::nonNull)
+          .collect(Collectors.toList());
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
     }
 
 

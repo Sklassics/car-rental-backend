@@ -35,9 +35,12 @@ public class WaitingController {
 	 @Autowired
 	 private EmailService emailService;
 	 
+<<<<<<< HEAD
 		@Autowired
 	    private OneDriveService oneDriveService;
 	 
+=======
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
 	@GetMapping("/adminVerified")
     public ResponseEntity<?> getWaitingProfile(@RequestHeader("Authorization") String authHeader) {
         try {
@@ -80,12 +83,17 @@ public class WaitingController {
 
         try {
             emailService.sendNewsletterSubscriptionEmail(email);
+<<<<<<< HEAD
             return ResponseEntity.ok("Subscribed to our newsletter!!");
+=======
+            return ResponseEntity.ok("Subscription successful. Confirmation email sent to " + email);
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                  .body("Failed to send email: " + e.getMessage());
         }
     }
+<<<<<<< HEAD
 	
 	 @GetMapping("/car-homepage")
 	    public ResponseEntity<Map<String, Object>> getCarHomePageImages() {
@@ -97,4 +105,6 @@ public class WaitingController {
 	                    .body(ResponseUtil.internalError("Failed to fetch image URLs"));
 	        }
 	    }
+=======
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
 }

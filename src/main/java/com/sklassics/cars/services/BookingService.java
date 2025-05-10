@@ -6,12 +6,18 @@ import com.sklassics.cars.entities.Booking;
 import com.sklassics.cars.entities.CarEntity;
 import com.sklassics.cars.entities.Transaction;
 import com.sklassics.cars.entities.TransactionUnderVerification;
+<<<<<<< HEAD
 import com.sklassics.cars.entities.User;
+=======
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
 import com.sklassics.cars.repositories.BookingRepository;
 import com.sklassics.cars.repositories.CarRepository;
 import com.sklassics.cars.repositories.TransactionRepository;
 import com.sklassics.cars.repositories.TransactionUnderVerificationRepository;
+<<<<<<< HEAD
 import com.sklassics.cars.repositories.UserRepository;
+=======
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,6 +43,16 @@ public class BookingService {
 
 	@Autowired
 	private CarRepository carRepository;
+<<<<<<< HEAD
+=======
+	
+	@Autowired
+    private OneDriveService oneDriveService;
+	
+	
+	@Autowired
+    private TransactionUnderVerificationRepository transactionUnderVerificationRepository;
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
 
 	@Autowired
 	private OneDriveService oneDriveService;
@@ -123,7 +139,11 @@ public class BookingService {
 //
 //	    return enrichedBookings;
 //	}
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
 	public List<Map<String, Object>> getBookingsByUserId(Long userId) {
 		List<Booking> bookings = bookingRepository.findByUserId(userId);
 		List<Map<String, Object>> enrichedBookings = new ArrayList<>();
@@ -142,6 +162,7 @@ public class BookingService {
 			bookingMap.put("agreedToTerms", booking.isAgreedToTerms());
 			bookingMap.put("createdAt", booking.getCreatedAt());
 
+<<<<<<< HEAD
 			// Set isAdminVerified based on transactionId
 			String transactionId = booking.getPaymentId();
 			boolean isAdminVerified = transactionUnderVerificationRepository.findByTransactionId(transactionId)
@@ -171,6 +192,46 @@ public class BookingService {
 						return null;
 					}
 				}).filter(Objects::nonNull).collect(Collectors.toList());
+=======
+	        // Set isAdminVerified based on transactionId
+	        String transactionId = booking.getPaymentId();
+	        boolean isAdminVerified = transactionUnderVerificationRepository
+	            .findByTransactionId(transactionId)
+	            .map(TransactionUnderVerification::isAdminVerified)
+	            .orElse(false);
+	        bookingMap.put("isAdminVerified", isAdminVerified);
+
+	        // If admin is not verified, return minimal data and a verification message
+	        if (!isAdminVerified) {
+	            bookingMap.put("message", "Your document is under admin verification. Please wait.");
+	            enrichedBookings.add(bookingMap);
+	            continue;
+	        }
+
+	        // Add car details only if admin is verified
+	        carRepository.findById(booking.getCarId()).ifPresent(car -> {
+	            Map<String, Object> carDetails = new HashMap<>();
+	            carDetails.put("carName", car.getCarName());
+	            carDetails.put("carModel", car.getCarModel());
+	            carDetails.put("location", car.getLocation());
+
+	            List<String> secureImageUrls = car.getImageUrls().stream()
+	                .map((String url) -> {
+	                    try {
+	                        String path = url.substring(url.indexOf("/root:/") + 7);
+	                        return oneDriveService.generateDirectDownloadLink(path);
+	                    } catch (Exception e) {
+	                        System.err.println("Error generating secure URL for " + url + ": " + e.getMessage());
+	                        return null;
+	                    }
+	                })
+	                .filter(Objects::nonNull)
+	                .collect(Collectors.toList());
+
+	            carDetails.put("imageUrls", secureImageUrls);
+	            bookingMap.put("car", carDetails);
+	        });
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
 
 				carDetails.put("imageUrls", secureImageUrls);
 				bookingMap.put("car", carDetails);
@@ -186,8 +247,17 @@ public class BookingService {
 		return bookingRepository.findById(id).orElse(null);
 	}
 
+<<<<<<< HEAD
 	public List<BookingUserDTO> getAllBookings() {
 		List<Booking> bookings = bookingRepository.findAll();
+=======
+
+
+	
+    public Booking getBookingsById(Long id) {
+        return bookingRepository.findById(id).orElse(null);
+    }
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
 
 		return bookings.stream().map(booking -> {
 			User user = userRepository.findById(booking.getUserId()).orElse(null);

@@ -17,13 +17,19 @@ import com.sklassics.cars.entities.CarEntity;
 import com.sklassics.cars.entities.Reservation;
 import com.sklassics.cars.entities.Transaction;
 import com.sklassics.cars.entities.TransactionUnderVerification;
+<<<<<<< HEAD
 import com.sklassics.cars.entities.User;
+=======
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
 import com.sklassics.cars.exceptions.CustomExceptions.CarNotFoundException;
 import com.sklassics.cars.repositories.CarRepository;
 import com.sklassics.cars.repositories.ReservationRepository;
 import com.sklassics.cars.repositories.TransactionRepository;
 import com.sklassics.cars.repositories.TransactionUnderVerificationRepository;
+<<<<<<< HEAD
 import com.sklassics.cars.repositories.UserRepository;
+=======
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
 
 @Service
 public class ReservationService {
@@ -42,12 +48,15 @@ public class ReservationService {
 	
 	@Autowired
     private TransactionUnderVerificationRepository transactionUnderVerificationRepository;
+<<<<<<< HEAD
 	
 	
 	@Autowired
     private UserRepository userRepository;
 	
 	
+=======
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
 
 	
 	public Reservation saveReservation(Reservation reservation, Long userId) {

@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 
             javaMailSender.send(message);
         }
+<<<<<<< HEAD
         
         public void sendEmail(String to, String subject, String text) {
             try {
@@ -51,6 +52,8 @@ import org.springframework.stereotype.Service;
                 System.out.println("Failed to send email: " + e.getMessage());
             }
         }
+=======
+>>>>>>> acc4b4f35693779f375ab3e1dd9d69f1580529d2
 
         
     }
